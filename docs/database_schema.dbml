@@ -1,0 +1,52 @@
+Table Users {
+  id integer [primary key, increment]
+  username text [unique, not null]
+  password_hash text [not null]
+  role text [not null]
+  created_at datetime [not null]
+  updated_at datetime
+}
+
+Table Products {
+  id integer [primary key, increment]
+  name text [not null]
+  price real [not null]
+  stock integer [not null]
+  barcode text [unique]
+  created_at datetime [not null]
+  updated_at datetime
+}
+
+Table Customers {
+  id integer [primary key, increment]
+  name text [not null]
+  email text [unique]
+  phone text
+  created_at datetime [not null]
+  updated_at datetime
+}
+
+Table Sales {
+  id integer [primary key, increment]
+  user_id integer [not null, ref: > Users.id]
+  customer tratto [ref: > Customers.id]
+  total_amount real [not null]
+  payment_method text [not null]
+  created_at datetime [not null]
+}
+
+Table SaleItems {
+  id integer [primary key, increment]
+  sale_id integer [not null, ref: > Sales.id]
+  product_id integer [not null, ref: > Products.id]
+  quantity integer [not null]
+  unit_price real [not null]
+  created_at datetime [not null]
+}
+
+Table Settings {
+  id integer [primary key, increment]
+  key text [unique, not null]
+  value text [not null]
+  updated_at datetime
+}
