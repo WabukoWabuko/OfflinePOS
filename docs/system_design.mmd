@@ -1,0 +1,67 @@
+classDiagram
+    class OfflinePOS_System {
+        +start_app()
+        +sync_with_cloud()
+        +toggle_theme()
+        +backup_data()
+        +restore_data()
+    }
+
+    class Frontend_Flet {
+        +render_login_screen()
+        +render_dashboard()
+        +render_sales_screen()
+        +render_products_screen()
+        +render_customers_screen()
+        +render_transactions_screen()
+        +render_settings_screen()
+        +update_online_status()
+    }
+
+    class Backend_Flask {
+        +handle_authentication()
+        +manage_products()
+        +process_sales()
+        +track_customers()
+        +record_transactions()
+        +handle_settings()
+        +export_data()
+        +import_data()
+    }
+
+    class Database_SQLite {
+        +store_users()
+        +store_products()
+        +store_customers()
+        +store_sales()
+        +store_sale_items()
+        +store_settings()
+    }
+
+    class Cloud_Sync {
+        +check_internet()
+        +sync_to_postgresql()
+        +fetch_from_cloud()
+    }
+
+    class Docker_Container {
+        +run_app()
+        +persist_data()
+    }
+
+    class Packaging {
+        +build_windows_exe()
+        +build_macos_app()
+        +build_linux_appimage()
+        +create_installer()
+    }
+
+    OfflinePOS_System --> Frontend_Flet : uses
+    OfflinePOS_System --> Backend_Flask : uses
+    OfflinePOS_System --> Database_SQLite : stores data
+    OfflinePOS_System --> Cloud_Sync : optional sync
+    OfflinePOS_System --> Docker_Container : deployed in
+    OfflinePOS_System --> Packaging : packaged by
+    Backend_Flask --> Database_SQLite : read/write
+    Frontend_Flet --> Backend_Flask : API calls
+    Cloud_Sync --> Database_SQLite : sync local data
