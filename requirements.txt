@@ -3,3 +3,4 @@ flask==3.0.3
 sqlalchemy==2.0.31
 pyinstaller==6.9.0
 docker==7.1.0
+bcrypt==4.2.0
