@@ -1,0 +1,38 @@
+# Python-specific ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Docker and build artifacts
+*.log
+*.pid
+*.seed
+docker-compose.override.yml
+dist/
+build/
+*.egg-info/
+
+# Database and sensitive data
+*.sqlite3
+*.db
+secrets/
+config/secrets/
+
+# Virtual environment
+pip-wheel-metadata/
+*.whl
