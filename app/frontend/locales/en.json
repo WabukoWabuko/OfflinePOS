@@ -1,0 +1,8 @@
+{
+    "app_name": "OfflinePOS",
+    "login": "Login",
+    "username": "Username",
+    "password": "Password",
+    "online": "Online",
+    "offline": "Offline"
+}

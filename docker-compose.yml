@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./offline_pos.db:/app/offline_pos.db
+      - ./backups:/app/backups
+    environment:
+      - PYTHONPATH=/app
+</services>

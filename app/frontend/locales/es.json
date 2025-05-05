@@ -1,0 +1,8 @@
+{
+    "app_name": "OfflinePOS",
+    "login": "Iniciar Sesión",
+    "username": "Nombre de Usuario",
+    "password": "Contraseña",
+    "online": "En Línea",
+    "offline": "Sin Conexión"
+}

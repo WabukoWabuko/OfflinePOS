@@ -2,12 +2,20 @@ import flet as ft
 import time
 import sys
 import os
-# Add project root to sys.path
+import json
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from app.utils.network import get_status
 
+def load_translations(lang="en"):
+    with open(f"app/frontend/locales/{lang}.json", "r") as f:
+        return json.load(f)
+
 def main(page: ft.Page):
-    page.title = "OfflinePOS - Login"
+    # Load initial language
+    lang = "en"
+    translations = load_translations(lang)
+
+    page.title = translations["app_name"]
     page.window_width = 400
     page.window_height = 500
     page.window_resizable = False
@@ -18,32 +26,65 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
     # Logo
-    logo = ft.Text("OfflinePOS", size=30, weight=ft.FontWeight.BOLD)
+    logo = ft.Text(translations["app_name"], size=30, weight=ft.FontWeight.BOLD)
 
     # Input fields
-    username_field = ft.TextField(label="Username", width=250)
-    password_field = ft.TextField(label="Password", password=True, width=250)
+    username_field = ft.TextField(label=translations["username"], width=250)
+    password_field = ft.TextField(label=translations["password"], password=True, width=250)
 
     # Login button
     login_button = ft.ElevatedButton(
-        text="Login",
+        text=translations["login"],
         width=250,
         on_click=lambda e: page.add(ft.Text("Login clicked!"))
     )
 
     # Online/offline status
-    status_text = ft.Text(get_status(), color=ft.colors.GREEN if get_status() == "Online" else ft.colors.RED)
+    status_text = ft.Text(
+        translations[get_status().lower()],
+        color=ft.colors.GREEN if get_status() == "Online" else ft.colors.RED
+    )
+
+    # Dark mode toggle
+    def toggle_theme(e):
+        page.theme_mode = ft.ThemeMode.DARK if page.theme_mode == ft.ThemeMode.LIGHT else ft.ThemeMode.LIGHT
+        page.update()
+
+    theme_toggle = ft.Switch(label="Dark Mode", on_change=toggle_theme)
+
+    # Language toggle
+    def change_language(e):
+        nonlocal lang, translations
+        lang = "es" if lang == "en" else "en"
+        translations = load_translations(lang)
+        page.title = translations["app_name"]
+        logo.value = translations["app_name"]
+        username_field.label = translations["username"]
+        password_field.label = translations["password"]
+        login_button.text = translations["login"]
+        status_text.value = translations[get_status().lower()]
+        page.update()
+
+    lang_toggle = ft.Dropdown(
+        label="Language",
+        width=250,
+        options=[
+            ft.dropdown.Option("en", "English"),
+            ft.dropdown.Option("es", "Español")
+        ],
+        value="en",
+        on_change=change_language
+    )
 
     # Update status periodically
     def update_status():
         while True:
             new_status = get_status()
-            status_text.value = new_status
+            status_text.value = translations[new_status.lower()]
             status_text.color = ft.colors.GREEN if new_status == "Online" else ft.colors.RED
             page.update()
             time.sleep(5)
 
-    # Start status update in a separate thread
     import threading
     threading.Thread(target=update_status, daemon=True).start()
 
@@ -58,14 +99,16 @@ def main(page: ft.Page):
                     password_field,
                     login_button,
                     ft.Divider(),
-                    status_text
+                    status_text,
+                    theme_toggle,
+                    lang_toggle
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=20
             ),
             padding=20,
-            bgcolor=ft.colors.WHITE,
+            bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLACK87,
             border_radius=10,
             shadow=ft.BoxShadow(
                 spread_radius=1,
