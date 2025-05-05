@@ -13,7 +13,6 @@ COPY main.py .
 
 # Ensure logs directory and permissions
 RUN mkdir -p /app/logs && chmod -R 777 /app/logs
-RUN touch /app/offline_pos.db && chmod 777 /app/offline_pos.db
 
 # Debug: List directory structure
 RUN ls -R /app
