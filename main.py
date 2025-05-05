@@ -10,19 +10,19 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = ft.colors.GREY_100
 
-    # State with proper Value initialization
-    is_online = ft.Value(False)
+    # State without ft.Value
+    is_online = False
     login_feedback = ft.Text("", color=ft.colors.RED)
 
     def check_internet():
         print("Checking internet...")
         try:
             requests.get("https://www.google.com", timeout=5)
-            is_online.value = True
+            is_online = True
             status_text.value = "Online"
             status_text.color = ft.colors.GREEN
         except requests.RequestException:
-            is_online.value = False
+            is_online = False
             status_text.value = "Offline"
             status_text.color = ft.colors.RED
         status_text.update()
