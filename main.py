@@ -1,7 +1,9 @@
 import flet as ft
 import requests
+import time
 
 def main(page: ft.Page):
+    print("Starting main function...")
     page.title = "OfflinePOS - Login"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
@@ -13,6 +15,7 @@ def main(page: ft.Page):
     login_feedback = ft.Text("", color=ft.colors.RED)
 
     def check_internet():
+        print("Checking internet...")
         try:
             requests.get("https://www.google.com", timeout=5)
             is_online.value = True
@@ -23,11 +26,12 @@ def main(page: ft.Page):
             status_text.value = "Offline"
             status_text.color = ft.colors.RED
         status_text.update()
+        print(f"Internet check result: {status_text.value}")
 
     # Status Indicator
     status_text = ft.Text("Checking...", color=ft.colors.BLUE)
+    check_internet()  # Initial check synchronously
     ft.Timer(2, check_internet)  # Check every 2 seconds
-    ft.Timer(2, lambda: check_internet(), True)  # Initial check
 
     # Logo
     logo = ft.Text("OfflinePOS", size=40, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE)
@@ -111,6 +115,8 @@ def main(page: ft.Page):
             width=350
         )
     )
+    print("UI layout added to page.")
 
 if __name__ == "__main__":
+    print("Running Flet app...")
     ft.app(target=main, host="0.0.0.0", port=8000)
