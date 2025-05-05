@@ -1,10 +1,8 @@
 import os
-import sys
 import logging
 from flask import Flask, request, jsonify
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-from app.db.database import SessionLocal, init_db
-from app.db.models import User
+from ..db.database import SessionLocal, init_db
+from ..db.models import User
 from sqlalchemy.orm import Session
 import bcrypt
 
