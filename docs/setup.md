@@ -1,6 +1,6 @@
 # OfflinePOS Setup Guide
 
-Hey there! This guide will get you started with OfflinePOS using Docker, perfect for any machine. It’s beginner-friendly, so let’s dive in!
+Hey there! This guide will get you running OfflinePOS in Docker, perfect for any machine. It’s beginner-friendly, so let’s go!
 
 ## Prerequisites
 - **Docker**: Install Docker and Docker Compose:
@@ -27,19 +27,48 @@ Hey there! This guide will get you started with OfflinePOS using Docker, perfect
    ```
 
 ## Step 2: Run with Docker
-1. Start the container (not yet implemented, will be added in Phase 2):
+1. Start the backend and frontend:
    ```bash
    docker-compose up --build
    ```
-2. Stop the container:
+2. Access:
+   - **Frontend**: `http://localhost:8000` (browser)
+   - **Backend API**: `http://localhost:5000` (via `curl` or Postman)
+3. Stop:
    ```bash
    docker-compose down
    ```
 
+## Step 3: Test the System
+1. **Frontend**:
+   - Open `http://localhost:8000` in a browser.
+   - Verify the login screen with username/password fields and a login button.
+2. **Backend API**:
+   - Test with `curl`:
+     ```bash
+     # Register a user
+     curl -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"password123","role":"admin"}' http://localhost:5000/api/register
+     # Login
+     curl -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"password123"}' http://localhost:5000/api/login
+     ```
+   - Expected login output:
+     ```json
+     {"message":"Login successful","role":"admin","user_id":1}
+     ```
+3. **Logs**:
+   - Check backend logs:
+     ```bash
+     docker-compose logs offlinepos
+     cat logs/backend.log
+     ```
+
 ## Troubleshooting
 - **Docker not starting**: Ensure Docker is running (`sudo systemctl start docker`) and you’re in the `docker` group.
-- **Git issues**: Verify Git is installed (`git --version`) and the repo URL is correct.
+- **Port conflict**: If ports 5000 or 8000 are in use, edit `docker-compose.yml` (e.g., `5001:5000`, `8001:8000`).
+- **ModuleNotFoundError**: Verify `__init__.py` files in `app/`, `app/backend/`, `app/db/`, etc.
+- **Database issues**: Check if `offline_pos.db` exists in the project root.
 
 ## Next Steps
-- Phase 2: Set up backend, frontend, and database.
-- Check `docs/` for updates after each phase.
+- Phase 3: Add offline features and cloud sync.
+- Phase 4: Implement dark mode, localization, and more.
+- Check `docs/` for updates.
