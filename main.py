@@ -8,7 +8,7 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = ft.colors.GREY_100
 
-    # State
+    # State with proper Value initialization
     is_online = ft.Value(False)
     login_feedback = ft.Text("", color=ft.colors.RED)
 
