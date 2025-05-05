@@ -16,7 +16,7 @@ def main(page: ft.Page):
     translations = load_translations(lang)
 
     page.title = translations["app_name"]
-    page.window_width = 400
+    page.window_width = 400  # Ignored in web mode, but kept for consistency
     page.window_height = 500
     page.window_resizable = False
     page.theme_mode = ft.ThemeMode.LIGHT
@@ -48,6 +48,7 @@ def main(page: ft.Page):
     # Dark mode toggle
     def toggle_theme(e):
         page.theme_mode = ft.ThemeMode.DARK if page.theme_mode == ft.ThemeMode.LIGHT else ft.ThemeMode.LIGHT
+        container.bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLACK87
         page.update()
 
     theme_toggle = ft.Switch(label="Dark Mode", on_change=toggle_theme)
@@ -89,34 +90,34 @@ def main(page: ft.Page):
     threading.Thread(target=update_status, daemon=True).start()
 
     # Layout
-    page.add(
-        ft.Container(
-            content=ft.Column(
-                [
-                    logo,
-                    ft.Divider(),
-                    username_field,
-                    password_field,
-                    login_button,
-                    ft.Divider(),
-                    status_text,
-                    theme_toggle,
-                    lang_toggle
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=20
-            ),
-            padding=20,
-            bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLACK87,
-            border_radius=10,
-            shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=10,
-                color=ft.colors.BLACK26
-            )
+    container = ft.Container(
+        content=ft.Column(
+            [
+                logo,
+                ft.Divider(),
+                username_field,
+                password_field,
+                login_button,
+                ft.Divider(),
+                status_text,
+                theme_toggle,
+                lang_toggle
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=20
+        ),
+        padding=20,
+        bgcolor=ft.colors.WHITE,
+        border_radius=10,
+        shadow=ft.BoxShadow(
+            spread_radius=1,
+            blur_radius=10,
+            color=ft.colors.BLACK26
         )
     )
 
+    page.add(container)
+
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.app(target=main, host="0.0.0.0", port=8000)

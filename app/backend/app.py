@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 import bcrypt
 
 # Set up logging
+os.makedirs('logs', exist_ok=True)
 logging.basicConfig(
     filename='logs/backend.log',
     level=logging.INFO,
@@ -77,5 +78,4 @@ def register():
         return jsonify({"message": "Server error"}), 500
 
 if __name__ == "__main__":
-    os.makedirs('logs', exist_ok=True)
     app.run(host='0.0.0.0', port=5000, debug=True)

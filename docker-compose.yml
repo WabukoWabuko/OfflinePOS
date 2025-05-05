@@ -1,12 +1,14 @@
-version: '3.8'
 services:
-  backend:
+  offlinepos:
     build: .
     ports:
-      - "5000:5000"
+      - "5000:5000"  # Flask backend
+      - "8000:8000"  # Flet frontend (web)
     volumes:
       - ./offline_pos.db:/app/offline_pos.db
       - ./backups:/app/backups
+      - ./logs:/app/logs
     environment:
       - PYTHONPATH=/app
+      - FLET_HOST=0.0.0.0
 </services>

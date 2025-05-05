@@ -1,6 +1,6 @@
 # OfflinePOS Setup Guide
 
-Hey there! This guide will help you set up the OfflinePOS system using Docker to avoid local machine issues. It’s beginner-friendly, so let’s dive in!
+Hey there! This guide will help you run the OfflinePOS system entirely in Docker containers, so you don’t need to worry about local machine issues. It’s super beginner-friendly, let’s go!
 
 ## Prerequisites
 - **Docker**: Install Docker and Docker Compose:
@@ -13,12 +13,14 @@ Hey there! This guide will help you set up the OfflinePOS system using Docker to
     Log out and back in.
   - Verify: `docker --version`, `docker-compose --version`.
 - **Git**: Install from [git-scm.com](https://git-scm.com).
-- **Code Editor**: Use [VS Code](https://code.visualstudio.com).
 - **Terminal**: Use Terminal (macOS/Linux) or Command Prompt (Windows).
 
 ## Step 1: Clone the Repository
 1. Open your terminal.
-2. Navigate to your project directory (e.g., `cd ~/Desktop`).
+2. Navigate to your project directory:
+   ```bash
+   cd ~/Desktop
+   ```
 3. Clone the repo:
    ```bash
    git clone https://github.com/YourUsername/OfflinePOS.git
@@ -27,78 +29,70 @@ Hey there! This guide will help you set up the OfflinePOS system using Docker to
    Replace `YourUsername` with your GitHub username.
 
 ## Step 2: Run with Docker
-1. Start the backend:
+1. Start both backend and frontend:
    ```bash
    docker-compose up --build
    ```
-2. The Flask API will be at `http://localhost:5000`.
-3. To stop, press `Ctrl+C` or run:
+2. Access the services:
+   - **Backend API**: `http://localhost:5000`
+   - **Frontend (web)**: `http://localhost:8000` (open in a browser)
+3. To stop:
    ```bash
    docker-compose down
    ```
 
-## Step 3: Run the Frontend (Local)
-The frontend isn’t containerized yet, so run it locally:
-1. Set up a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the login screen:
-   ```bash
-   python app/frontend/main.py
-   ```
-4. You’ll see the login screen with:
-   - Online/offline status (green/red).
-   - Dark mode toggle.
-   - Language switch (English/Spanish).
-
-## Step 4: Test the API
-Test the backend with `curl` or Postman:
-1. Register a user:
-   ```bash
-   curl -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"password123","role":"admin"}' http://localhost:5000/api/register
-   ```
-2. Login:
-   ```bash
-   curl -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"password123"}' http://localhost:5000/api/login
-   ```
-
-## Step 5: Test Offline Features
-1. **Network Status**: The login screen shows online/offline status.
-2. **Backup/Restore**:
-   - Run:
+## Step 3: Test the System
+1. **Frontend**:
+   - Open `http://localhost:8000` in a browser.
+   - Check the login screen with:
+     - Username/password fields.
+     - Online/offline status (green/red).
+     - Dark mode toggle.
+     - Language switch (English/Spanish).
+2. **Backend API**:
+   - Test with `curl` or Postman:
      ```bash
-     python app/utils/backup.py
+     # Register a user
+     curl -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"password123","role":"admin"}' http://localhost:5000/api/register
+     # Login
+     curl -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"password123"}' http://localhost:5000/api/login
+     ```
+3. **Logs**:
+   - View container logs:
+     ```bash
+     docker-compose logs offlinepos
+     ```
+   - Check backend logs in `logs/backend.log` (in the project root).
+
+## Step 4: Test Offline Features
+1. **Network Status**:
+   - The login screen (`http://localhost:8000`) shows online/offline status.
+   - Test standalone:
+     ```bash
+     docker exec -it offlinepos python app/utils/network.py
+     ```
+2. **Backup/Restore**:
+   - Create a backup:
+     ```bash
+     docker exec -it offlinepos python app/utils/backup.py
      ```
    - Check `backups/` for the backup file.
 3. **Cloud Sync (Placeholder)**:
    - Run:
      ```bash
-     python app/utils/sync.py
+     docker exec -it offlinepos python app/utils/sync.py
      ```
-
-## Step 6: Check Logs
-- Backend logs are in `logs/backend.log` (inside the Docker container).
-- To view:
-  ```bash
-  docker-compose logs backend
-  ```
 
 ## Troubleshooting
 - **Docker not starting**: Ensure Docker is running (`sudo systemctl start docker`) and you’re in the `docker` group.
-- **ModuleNotFoundError**: Docker sets `PYTHONPATH`, so this should be resolved. If running locally, use `PYTHONPATH=. python app/backend/app.py`.
-- **Port conflict**: If `port 5000` is in use, edit `docker-compose.yml` to change the port (e.g., `5001:5000`).
+- **Port conflict**: If ports 5000 or 8000 are in use, edit `docker-compose.yml` (e.g., `5001:5000`, `8001:8000`).
 - **Database issues**: Check if `offline_pos.db` exists in the project root.
+- **Frontend not loading**: Ensure `http://localhost:8000` is accessed, not `https`.
 
 ## Next Steps
-- Containerize the frontend.
 - Connect the login screen to the backend API.
+- Build the dashboard and other UI screens.
 - Implement full cloud sync with PostgreSQL.
-- Build the dashboard and other features.
+- Package the app for Windows/macOS/Linux.
 
 If you get stuck, check the GitHub issues page or ask for help!
