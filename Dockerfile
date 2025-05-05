@@ -10,6 +10,10 @@ COPY app.py .
 COPY database.py .
 COPY models.py .
 COPY main.py .
+COPY routes_auth.py .
+COPY routes_products.py .
+COPY routes_sales.py .
+COPY routes_sync.py .
 
 # Ensure logs directory and permissions
 RUN mkdir -p /app/logs && chmod -R 777 /app/logs
@@ -19,4 +23,4 @@ RUN ls -R /app
 
 EXPOSE 5000 8000
 
-CMD ["sh", "-c", "python app.py & python main.py"]
+CMD ["sh", "-c", "python app.py & sleep 5 && python main.py"]
