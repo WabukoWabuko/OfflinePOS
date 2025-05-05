@@ -2,7 +2,7 @@ import flet as ft
 import requests
 import asyncio
 
-def build_login_view(page, on_login, language="en"):
+def build_login_view(page, on_login, language="en", show_back=False, go_back=None):
     # Localization
     texts = {
         "en": {
@@ -124,10 +124,19 @@ def build_login_view(page, on_login, language="en"):
         on_click=login_click
     )
 
+    # Back button
+    back_button = ft.IconButton(
+        icon=ft.icons.ARROW_BACK,
+        on_click=lambda e: go_back(),
+        tooltip="Back",
+        visible=show_back
+    )
+
     # Layout container
     main_container = ft.Container(
         content=ft.Column(
             [
+                back_button,
                 logo,
                 status_text,
                 username_field,

@@ -1,7 +1,7 @@
 import flet as ft
 import requests
 
-def build_products_view(page, language="en"):
+def build_products_view(page, language="en", show_back=False, go_back=None):
     # Localization
     texts = {
         "en": {
@@ -127,8 +127,17 @@ def build_products_view(page, language="en"):
     # Initial fetch
     fetch_products()
 
+    # Back button
+    back_button = ft.IconButton(
+        icon=ft.icons.ARROW_BACK,
+        on_click=lambda e: go_back(),
+        tooltip="Back",
+        visible=show_back
+    )
+
     return ft.Container(
         content=ft.Column([
+            back_button,
             ft.Text(lang["title"], size=20, weight=ft.FontWeight.BOLD),
             ft.Row([
                 name_field,
