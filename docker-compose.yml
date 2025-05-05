@@ -11,3 +11,6 @@ services:
     environment:
       - PYTHONPATH=/app
       - FLET_HOST=0.0.0.0
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
