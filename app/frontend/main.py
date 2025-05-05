@@ -1,4 +1,10 @@
 import flet as ft
+import time
+import sys
+import os
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from app.utils.network import get_status
 
 def main(page: ft.Page):
     page.title = "OfflinePOS - Login"
@@ -11,7 +17,7 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    # Logo (placeholder text for now)
+    # Logo
     logo = ft.Text("OfflinePOS", size=30, weight=ft.FontWeight.BOLD)
 
     # Input fields
@@ -22,11 +28,24 @@ def main(page: ft.Page):
     login_button = ft.ElevatedButton(
         text="Login",
         width=250,
-        on_click=lambda e: page.add(ft.Text("Login clicked!"))  # Placeholder action
+        on_click=lambda e: page.add(ft.Text("Login clicked!"))
     )
 
-    # Online/offline status (placeholder)
-    status = ft.Text("Online", color=ft.colors.GREEN)
+    # Online/offline status
+    status_text = ft.Text(get_status(), color=ft.colors.GREEN if get_status() == "Online" else ft.colors.RED)
+
+    # Update status periodically
+    def update_status():
+        while True:
+            new_status = get_status()
+            status_text.value = new_status
+            status_text.color = ft.colors.GREEN if new_status == "Online" else ft.colors.RED
+            page.update()
+            time.sleep(5)
+
+    # Start status update in a separate thread
+    import threading
+    threading.Thread(target=update_status, daemon=True).start()
 
     # Layout
     page.add(
@@ -39,7 +58,7 @@ def main(page: ft.Page):
                     password_field,
                     login_button,
                     ft.Divider(),
-                    status
+                    status_text
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
