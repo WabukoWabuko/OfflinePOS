@@ -32,3 +32,11 @@ def init_db():
     except Exception as e:
         print(f"Error creating database tables: {str(e)}")
         raise
+
+def cache_sale(db, sale_data):
+    """Cache a sale for offline use."""
+    from models import CachedSale
+    cached_sale = CachedSale(**sale_data)
+    db.add(cached_sale)
+    db.commit()
+    print(f"Cached sale: {sale_data}")

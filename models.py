@@ -63,3 +63,14 @@ class Setting(Base):
     key = Column(String, unique=True, nullable=False)
     value = Column(String, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+class CachedSale(Base):
+    __tablename__ = "cached_sales"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sale_id = Column(Integer, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
+    total_amount = Column(Float, nullable=False)
+    payment_method = Column(String, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    synced = Column(Integer, nullable=False, default=0)  # 0 = pending, 1 = synced
