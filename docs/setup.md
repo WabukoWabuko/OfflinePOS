@@ -65,8 +65,8 @@ Hey there! This guide will get you running OfflinePOS in Docker, perfect for any
 ## Troubleshooting
 - **Docker not starting**: Ensure Docker is running (`sudo systemctl start docker`) and you’re in the `docker` group.
 - **Port conflict**: If ports 5000 or 8000 are in use, edit `docker-compose.yml` (e.g., `5001:5000`, `8001:8000`).
-- **ModuleNotFoundError**: Verify `__init__.py` files in `app/`, `app/backend/`, `app/db/`, etc.
 - **Database issues**: Check if `offline_pos.db` exists in the project root.
+- **Frontend not loading**: Use `http://localhost:8000` (not `https`).
 
 ## Next Steps
 - Phase 3: Add offline features and cloud sync.

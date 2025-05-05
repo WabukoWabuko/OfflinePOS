@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 # SQLite database file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, '../../offline_pos.db')}"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'offline_pos.db')}"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

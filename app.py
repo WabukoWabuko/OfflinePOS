@@ -1,8 +1,8 @@
 import os
 import logging
 from flask import Flask, request, jsonify
-from ..db.database import SessionLocal, init_db
-from ..db.models import User
+from database import SessionLocal, init_db
+from models import User
 from sqlalchemy.orm import Session
 import bcrypt
 
