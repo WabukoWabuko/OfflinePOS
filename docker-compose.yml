@@ -12,3 +12,5 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
+    command: watchmedo auto-restart --directory=./ --pattern="*.py" --recursive -- python main.py
+
