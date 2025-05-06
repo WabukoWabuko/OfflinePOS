@@ -8,6 +8,7 @@ from models import Base
 from database import engine, SessionLocal
 import os
 import logging
+from livereload import Server
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, filename='/app/logs/backend.log', filemode='a',
@@ -45,5 +46,7 @@ with app.app_context():
     init_db()
 
 if __name__ == "__main__":
-    logger.info("Starting Flask backend on port 5000...")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    logger.info("Starting Flask backend with live reload on port 5000...")
+    server = Server(app.wsgi_app)
+    server.watch('**/*.py')  # Watch all Python files
+    server.serve(host='0.0.0.0', port=5000, debug=True)

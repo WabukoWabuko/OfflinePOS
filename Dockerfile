@@ -4,8 +4,9 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install livereload watchdog
 
-# Copy Python files from root
+# Copy Python files and script
 COPY app.py .
 COPY database.py .
 COPY models.py .
@@ -22,6 +23,7 @@ COPY ui_sales.py .
 COPY ui_settings.py .
 COPY utils_network.py .
 COPY ui_customers.py .
+COPY entrypoint.sh .
 
 # Ensure logs directory and permissions
 RUN mkdir -p /app/logs && chmod -R 777 /app/logs
@@ -31,4 +33,4 @@ RUN ls -R /app
 
 EXPOSE 5000 8000
 
-CMD ["sh", "-c", "python app.py & sleep 10 && python main.py"]
+CMD ["./entrypoint.sh"]
