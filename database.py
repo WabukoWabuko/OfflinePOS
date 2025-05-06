@@ -8,7 +8,7 @@ Base = declarative_base()
 # Models
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = {'extend_existing': True}  # Allow table redefinition
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
@@ -64,17 +64,6 @@ class Customer(Base):
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////app/offline_pos.db")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def init_db():
-    print("Attempting to initialize database...")
-    file_exists = os.path.exists("/app/offline_pos.db")
-    print(f"File exists: {file_exists}")
-    if not file_exists:
-        print("Creating database tables...")
-        Base.metadata.create_all(bind=engine)
-        print("Database tables created")
-    else:
-        print("Database file already exists, skipping creation")
 
 def cache_sale(db, sale_data):
     cached_sale = CachedSale(

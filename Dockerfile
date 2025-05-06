@@ -31,4 +31,4 @@ RUN ls -R /app
 
 EXPOSE 5000 8000
 
-CMD ["sh", "-c", "python app.py & sleep 10 && python main.py"]
+CMD ["python", "app.py"]
