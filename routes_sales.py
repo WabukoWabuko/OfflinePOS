@@ -1,10 +1,10 @@
 import logging
 from flask import Blueprint, request, jsonify
 from database import SessionLocal
-from models import Product
+from models import Sale, SaleItem
 from sqlalchemy.orm import Session
 
-products_bp = Blueprint('products', __name__, url_prefix='/api')
+sales_bp = Blueprint('sales', __name__, url_prefix='/api/sales')
 logger = logging.getLogger(__name__)
 
 def get_db():
@@ -14,100 +14,101 @@ def get_db():
     finally:
         db.close()
 
-def validate_product_data(data):
-    if not all(k in data for k in ("name", "price", "stock", "barcode")):
-        return False, "Missing required fields"
-    if not isinstance(data["price"], (int, float)) or data["price"] < 0:
-        return False, "Invalid price"
-    if not isinstance(data["stock"], int) or data["stock"] < 0:
-        return False, "Invalid stock"
+def validate_sale_data(data):
+    required_fields = {"total_amount", "payment_method"}
+    if not all(k in data for k in required_fields):
+        return False, "Missing required fields: total_amount or payment_method"
+    if not isinstance(data["total_amount"], (int, float)) or data["total_amount"] < 0:
+        return False, "Invalid total_amount"
+    if data["payment_method"] not in ["Cash", "Card"]:
+        return False, "Invalid payment_method"
     return True, ""
 
-@products_bp.route('/products', methods=['POST'])
-def create_product():
+@sales_bp.route('', methods=['POST'])
+def create_sale():
     try:
         data = request.get_json()
-        is_valid, message = validate_product_data(data)
+        is_valid, message = validate_sale_data(data)
         if not is_valid:
             return jsonify({"message": message}), 400
 
-        name = data.get('name')
-        price = float(data.get('price'))
-        stock = int(data.get('stock'))
-        barcode = data.get('barcode')
-        logger.info(f"Creating product: {name}")
-        print(f"Creating product: {name}")
+        total_amount = float(data.get('total_amount'))
+        payment_method = data.get('payment_method')
+        user_id = data.get('user_id')
+        customer_id = data.get('customer_id')
+        items = data.get('items', [])
 
+        logger.info(f"Creating sale with total_amount: {total_amount}, payment_method: {payment_method}")
         db = next(get_db())
-        product = Product(name=name, price=price, stock=stock, barcode=barcode)
-        db.add(product)
+        sale = Sale(user_id=user_id, customer_id=customer_id, total_amount=total_amount, payment_method=payment_method)
+        db.add(sale)
+        db.flush()  # Get sale.id before committing items
+
+        for item in items:
+            sale_item = SaleItem(sale_id=sale.id, product_id=item.get('product_id'), quantity=item.get('quantity'), unit_price=item.get('unit_price'))
+            db.add(sale_item)
+
         db.commit()
-        logger.info(f"Product created: {name}")
-        print(f"Product created: {name}")
-        return jsonify({"message": "Product created successfully", "product_id": product.id}), 201
+        logger.info(f"Sale created with id: {sale.id}")
+        return jsonify({"message": "Sale created successfully", "sale_id": sale.id}), 201
+    except ValueError as ve:
+        logger.error(f"Validation error creating sale: {str(ve)}")
+        return jsonify({"message": f"Validation error: {str(ve)}"}), 400
     except Exception as e:
-        logger.error(f"Create product error: {str(e)}")
-        print(f"Create product error: {str(e)}")
+        logger.error(f"Create sale error: {str(e)}")
         return jsonify({"message": "Server error"}), 500
 
-@products_bp.route('/products', methods=['GET'])
-def get_products():
+@sales_bp.route('', methods=['GET'])
+def get_sales():
     try:
         db = next(get_db())
-        products = db.query(Product).all()
-        product_list = [{"id": p.id, "name": p.name, "price": p.price, "stock": p.stock, "barcode": p.barcode} for p in products]
-        logger.info("Fetched all products")
-        print("Fetched all products")
-        return jsonify({"products": product_list}), 200
+        sales = db.query(Sale).all()
+        sales_list = [{"id": s.id, "user_id": s.user_id, "customer_id": s.customer_id, "total_amount": s.total_amount, "payment_method": s.payment_method, "created_at": s.created_at.isoformat()} for s in sales]
+        logger.info("Fetched all sales")
+        return jsonify({"sales": sales_list}), 200
     except Exception as e:
-        logger.error(f"Get products error: {str(e)}")
-        print(f"Get products error: {str(e)}")
+        logger.error(f"Get sales error: {str(e)}")
         return jsonify({"message": "Server error"}), 500
 
-@products_bp.route('/products/<int:product_id>', methods=['PUT'])
-def update_product(product_id):
+@sales_bp.route('/<int:sale_id>', methods=['PUT'])
+def update_sale(sale_id):
     try:
         data = request.get_json()
-        is_valid, message = validate_product_data(data)
+        is_valid, message = validate_sale_data(data)
         if not is_valid:
             return jsonify({"message": message}), 400
 
         db = next(get_db())
-        product = db.query(Product).filter(Product.id == product_id).first()
-        if not product:
-            logger.warning(f"Product not found: {product_id}")
-            print(f"Product not found: {product_id}")
-            return jsonify({"message": "Product not found"}), 404
+        sale = db.query(Sale).filter(Sale.id == sale_id).first()
+        if not sale:
+            logger.warning(f"Sale not found: {sale_id}")
+            return jsonify({"message": "Sale not found"}), 404
 
-        product.name = data.get('name', product.name)
-        product.price = float(data.get('price', product.price))
-        product.stock = int(data.get('stock', product.stock))
-        product.barcode = data.get('barcode', product.barcode)
+        sale.total_amount = float(data.get('total_amount', sale.total_amount))
+        sale.payment_method = data.get('payment_method', sale.payment_method)
         db.commit()
-        logger.info(f"Product updated: {product_id}")
-        print(f"Product updated: {product_id}")
-        return jsonify({"message": "Product updated successfully"}), 200
+        logger.info(f"Sale updated: {sale_id}")
+        return jsonify({"message": "Sale updated successfully"}), 200
+    except ValueError as ve:
+        logger.error(f"Validation error updating sale: {str(ve)}")
+        return jsonify({"message": f"Validation error: {str(ve)}"}), 400
     except Exception as e:
-        logger.error(f"Update product error: {str(e)}")
-        print(f"Update product error: {str(e)}")
+        logger.error(f"Update sale error: {str(e)}")
         return jsonify({"message": "Server error"}), 500
 
-@products_bp.route('/products/<int:product_id>', methods=['DELETE'])
-def delete_product(product_id):
+@sales_bp.route('/<int:sale_id>', methods=['DELETE'])
+def delete_sale(sale_id):
     try:
         db = next(get_db())
-        product = db.query(Product).filter(Product.id == product_id).first()
-        if not product:
-            logger.warning(f"Product not found: {product_id}")
-            print(f"Product not found: {product_id}")
-            return jsonify({"message": "Product not found"}), 404
+        sale = db.query(Sale).filter(Sale.id == sale_id).first()
+        if not sale:
+            logger.warning(f"Sale not found: {sale_id}")
+            return jsonify({"message": "Sale not found"}), 404
 
-        db.delete(product)
+        db.delete(sale)
         db.commit()
-        logger.info(f"Product deleted: {product_id}")
-        print(f"Product deleted: {product_id}")
-        return jsonify({"message": "Product deleted successfully"}), 200
+        logger.info(f"Sale deleted: {sale_id}")
+        return jsonify({"message": "Sale deleted successfully"}), 200
     except Exception as e:
-        logger.error(f"Delete product error: {str(e)}")
-        print(f"Delete product error: {str(e)}")
+        logger.error(f"Delete sale error: {str(e)}")
         return jsonify({"message": "Server error"}), 500
