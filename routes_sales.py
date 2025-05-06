@@ -1,10 +1,10 @@
-import logging
+<BS>import logging
 from flask import Blueprint, request, jsonify
-from database import SessionLocal, cache_sale
-from models import Sale, SaleItem, CachedSale
+from database import SessionLocal
+from models import Product
 from sqlalchemy.orm import Session
 
-sales_bp = Blueprint('sales', __name__)
+products_bp = Blueprint('products', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
 
 def get_db():
@@ -14,86 +14,100 @@ def get_db():
     finally:
         db.close()
 
-def is_internet_available():
-    import requests
-    try:
-        requests.get("https://www.google.com", timeout=5)
-        return True
-    except requests.RequestException:
-        return False
+def validate_product_data(data):
+    if not all(k in data for k in ("name", "price", "stock", "barcode")):
+        return False, "Missing required fields"
+    if not isinstance(data["price"], (int, float)) or data["price"] < 0:
+        return False, "Invalid price"
+    if not isinstance(data["stock"], int) or data["stock"] < 0:
+        return False, "Invalid stock"
+    return True, ""
 
-@sales_bp.route('/sales', methods=['POST'])
-def create_sale():
+@products_bp.route('/products', methods=['POST'])
+def create_product():
     try:
         data = request.get_json()
-        user_id = data.get('user_id')
-        customer_id = data.get('customer_id')
-        total_amount = data.get('total_amount')
-        payment_method = data.get('payment_method')
-        items = data.get('items')  # List of {product_id, quantity, unit_price}
-        logger.info(f"Creating sale for user: {user_id}")
-        print(f"Creating sale for user: {user_id}")
+        is_valid, message = validate_product_data(data)
+        if not is_valid:
+            return jsonify({"message": message}), 400
+
+        name = data.get('name')
+        price = float(data.get('price'))
+        stock = int(data.get('stock'))
+        barcode = data.get('barcode')
+        logger.info(f"Creating product: {name}")
+        print(f"Creating product: {name}")
 
         db = next(get_db())
-        if not is_internet_available():
-            # Cache sale for offline sync
-            sale_data = {
-                "user_id": user_id,
-                "customer_id": customer_id,
-                "total_amount": total_amount,
-                "payment_method": payment_method
-            }
-            cache_sale(db, sale_data)
-            logger.info("Sale cached offline")
-            print("Sale cached offline")
-            return jsonify({"message": "Sale cached offline"}), 201
-
-        # Online: Save sale directly
-        sale = Sale(
-            user_id=user_id,
-            customer_id=customer_id,
-            total_amount=total_amount,
-            payment_method=payment_method
-        )
-        db.add(sale)
-        db.flush()
-
-        for item in items:
-            sale_item = SaleItem(
-                sale_id=sale.id,
-                product_id=item['product_id'],
-                quantity=item['quantity'],
-                unit_price=item['unit_price']
-            )
-            db.add(sale_item)
+        product = Product(name=name, price=price, stock=stock, barcode=barcode)
+        db.add(product)
         db.commit()
-        logger.info(f"Sale created: {sale.id}")
-        print(f"Sale created: {sale.id}")
-        return jsonify({"message": "Sale created successfully", "sale_id": sale.id}), 201
+        logger.info(f"Product created: {name}")
+        print(f"Product created: {name}")
+        return jsonify({"message": "Product created successfully", "product_id": product.id}), 201
     except Exception as e:
-        logger.error(f"Create sale error: {str(e)}")
-        print(f"Create sale error: {str(e)}")
+        logger.error(f"Create product error: {str(e)}")
+        print(f"Create product error: {str(e)}")
         return jsonify({"message": "Server error"}), 500
 
-@sales_bp.route('/sales', methods=['GET'])
-def get_sales():
+@products_bp.route('/products', methods=['GET'])
+def get_products():
     try:
         db = next(get_db())
-        sales = db.query(Sale).all()
-        sale_list = [
-            {
-                "id": s.id,
-                "user_id": s.user_id,
-                "customer_id": s.customer_id,
-                "total_amount": s.total_amount,
-                "payment_method": s.payment_method,
-                "created_at": s.created_at.isoformat()
-            } for s in sales
-        ]
-        logger.info("Fetched all sales")
-        print("Fetched all sales")
-        return jsonify({"sales": sale_list}), 200
+        products = db.query(Product).all()
+        product_list = [{"id": p.id, "name": p.name, "price": p.price, "stock": p.stock, "barcode": p.barcode} for p in products]
+        logger.info("Fetched all products")
+        print("Fetched all products")
+        return jsonify({"products": product_list}), 200
     except Exception as e:
-        logger.error(f"Get sales error: {str(e)}")
-        print(f"Get sales error: {str(e)}")
+        logger.error(f"Get products error: {str(e)}")
+        print(f"Get products error: {str(e)}")
+        return jsonify({"message": "Server error"}), 500
+
+@products_bp.route('/products/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    try:
+        data = request.get_json()
+        is_valid, message = validate_product_data(data)
+        if not is_valid:
+            return jsonify({"message": message}), 400
+
+        db = next(get_db())
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            logger.warning(f"Product not found: {product_id}")
+            print(f"Product not found: {product_id}")
+            return jsonify({"message": "Product not found"}), 404
+
+        product.name = data.get('name', product.name)
+        product.price = float(data.get('price', product.price))
+        product.stock = int(data.get('stock', product.stock))
+        product.barcode = data.get('barcode', product.barcode)
+        db.commit()
+        logger.info(f"Product updated: {product_id}")
+        print(f"Product updated: {product_id}")
+        return jsonify({"message": "Product updated successfully"}), 200
+    except Exception as e:
+        logger.error(f"Update product error: {str(e)}")
+        print(f"Update product error: {str(e)}")
+        return jsonify({"message": "Server error"}), 500
+
+@products_bp.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    try:
+        db = next(get_db())
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            logger.warning(f"Product not found: {product_id}")
+            print(f"Product not found: {product_id}")
+            return jsonify({"message": "Product not found"}), 404
+
+        db.delete(product)
+        db.commit()
+        logger.info(f"Product deleted: {product_id}")
+        print(f"Product deleted: {product_id}")
+        return jsonify({"message": "Product deleted successfully"}), 200
+    except Exception as e:
+        logger.error(f"Delete product error: {str(e)}")
+        print(f"Delete product error: {str(e)}")
         return jsonify({"message": "Server error"}), 500

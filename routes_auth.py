@@ -1,11 +1,11 @@
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from database import SessionLocal
 from models import User
 from sqlalchemy.orm import Session
 import bcrypt
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
 
 def get_db():
@@ -28,6 +28,8 @@ def login():
         user = db.query(User).filter(User.username == username).first()
 
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
+            session['user_id'] = user.id
+            session['role'] = user.role
             logger.info(f"Login successful for user: {username}")
             print(f"Login successful for user: {username}")
             return jsonify({"message": "Login successful", "user_id": user.id, "role": user.role}), 200
@@ -66,3 +68,9 @@ def register():
         logger.error(f"Register error: {str(e)}")
         print(f"Register error: {str(e)}")
         return jsonify({"message": "Server error"}), 500
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    session.pop('role', None)
+    return jsonify({"message": "Logged out successfully"}), 200

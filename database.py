@@ -1,42 +1,87 @@
-import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-
-# SQLite database file
-SQLALCHEMY_DATABASE_URL = "sqlite:////app/offline_pos.db"
-print(f"Database URL: {SQLALCHEMY_DATABASE_URL}")
-print(f"File exists: {os.path.exists('/app/offline_pos.db')}")
-
-# Ensure the file exists
-if not os.path.exists('/app/offline_pos.db'):
-    print("Creating offline_pos.db file...")
-    open('/app/offline_pos.db', 'a').close()
-    os.chmod('/app/offline_pos.db', 0o777)
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}  # SQLite-specific
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+import os
 
 Base = declarative_base()
 
+# Models
+class User(Base):
+    __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}  # Allow table redefinition
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+
+class Product(Base):
+    __tablename__ = "products"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    stock = Column(Integer, nullable=False)
+    barcode = Column(String, unique=True)
+
+class Sale(Base):
+    __tablename__ = "sales"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    customer_id = Column(Integer)
+    total_amount = Column(Float, nullable=False)
+    payment_method = Column(String, nullable=False)
+    created_at = Column(DateTime, nullable=False)
+
+class SaleItem(Base):
+    __tablename__ = "sale_items"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer, primary_key=True)
+    sale_id = Column(Integer, nullable=False)
+    product_id = Column(Integer, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    unit_price = Column(Float, nullable=False)
+
+class CachedSale(Base):
+    __tablename__ = "cached_sales"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    customer_id = Column(Integer)
+    total_amount = Column(Float, nullable=False)
+    payment_method = Column(String, nullable=False)
+    synced = Column(Boolean, default=False)
+
+class Customer(Base):
+    __tablename__ = "customers"
+    __table_args__ = {'extend_existing': True}
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True)
+    phone = Column(String)
+
+# Database setup
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////app/offline_pos.db")
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 def init_db():
-    """Initialize the database by creating all tables."""
-    print("Creating database tables...")
-    try:
+    print("Attempting to initialize database...")
+    file_exists = os.path.exists("/app/offline_pos.db")
+    print(f"File exists: {file_exists}")
+    if not file_exists:
+        print("Creating database tables...")
         Base.metadata.create_all(bind=engine)
         print("Database tables created")
-    except Exception as e:
-        print(f"Error creating database tables: {str(e)}")
-        raise
+    else:
+        print("Database file already exists, skipping creation")
 
 def cache_sale(db, sale_data):
-    """Cache a sale for offline use."""
-    from models import CachedSale
-    cached_sale = CachedSale(**sale_data)
+    cached_sale = CachedSale(
+        user_id=sale_data["user_id"],
+        customer_id=sale_data.get("customer_id"),
+        total_amount=sale_data["total_amount"],
+        payment_method=sale_data["payment_method"]
+    )
     db.add(cached_sale)
     db.commit()
-    print(f"Cached sale: {sale_data}")

@@ -14,7 +14,8 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             "fill_fields": "Please fill all fields",
             "success": "Login successful!",
             "failed": "Login failed!",
-            "error": "Error: Cannot connect to server!"
+            "error": "Error: Cannot connect to server!",
+            "already_logged_in": "Already logged in, redirecting..."
         },
         "fr": {
             "title": "OfflinePOS",
@@ -25,7 +26,8 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             "fill_fields": "Veuillez remplir tous les champs",
             "success": "Connexion réussie !",
             "failed": "Échec de la connexion !",
-            "error": "Erreur : Impossible de se connecter au serveur !"
+            "error": "Erreur : Impossible de se connecter au serveur !",
+            "already_logged_in": "Déjà connecté, redirection en cours..."
         }
     }
     lang = texts[language]
@@ -49,6 +51,18 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             status_text.update()
             await asyncio.sleep(5)
 
+    # Check session
+    def check_session():
+        try:
+            response = requests.get("http://offlinepos:5000/api/check-session")
+            if response.status_code == 200 and response.json().get("user_id"):
+                login_feedback.value = lang["already_logged_in"]
+                login_feedback.color = ft.colors.BLUE
+                login_feedback.update()
+                page.go("/dashboard")
+        except Exception:
+            pass
+
     # Logo
     logo = ft.Text(lang["title"], size=40, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE)
 
@@ -71,7 +85,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
     )
 
     # Login button logic
-    def login_click(e):
+    async def login_click(e):
         if not username_field.value or not password_field.value:
             login_feedback.value = lang["fill_fields"]
             login_feedback.color = ft.colors.RED
@@ -86,7 +100,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         for attempt in range(retries):
             try:
                 response = requests.post(
-                    "http://localhost:5000/api/login",
+                    "http://offlinepos:5000/api/login",
                     json={
                         "username": username_field.value,
                         "password": password_field.value
@@ -108,7 +122,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
                     login_feedback.value = lang["error"]
                     login_feedback.color = ft.colors.RED
                 else:
-                    asyncio.sleep(2)
+                    await asyncio.sleep(2)
             except Exception as e:
                 print(f"Unexpected error: {str(e)}")
                 login_feedback.value = f"Error: {str(e)}"
@@ -121,7 +135,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         width=300,
         bgcolor=ft.colors.BLUE,
         color=ft.colors.WHITE,
-        on_click=login_click
+        on_click=lambda e: page.run_task(login_click)
     )
 
     # Back button
@@ -159,7 +173,8 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         width=350
     )
 
-    # Start the async connection monitor
+    # Start the async connection monitor after the container is built
+    check_session()
     page.run_task(monitor_connection)
 
     return main_container

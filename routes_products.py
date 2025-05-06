@@ -4,7 +4,7 @@ from database import SessionLocal
 from models import Product
 from sqlalchemy.orm import Session
 
-products_bp = Blueprint('products', __name__)
+products_bp = Blueprint('products', __name__, url_prefix='/api')
 logger = logging.getLogger(__name__)
 
 def get_db():
@@ -14,13 +14,26 @@ def get_db():
     finally:
         db.close()
 
+def validate_product_data(data):
+    if not all(k in data for k in ("name", "price", "stock", "barcode")):
+        return False, "Missing required fields"
+    if not isinstance(data["price"], (int, float)) or data["price"] < 0:
+        return False, "Invalid price"
+    if not isinstance(data["stock"], int) or data["stock"] < 0:
+        return False, "Invalid stock"
+    return True, ""
+
 @products_bp.route('/products', methods=['POST'])
 def create_product():
     try:
         data = request.get_json()
+        is_valid, message = validate_product_data(data)
+        if not is_valid:
+            return jsonify({"message": message}), 400
+
         name = data.get('name')
-        price = data.get('price')
-        stock = data.get('stock')
+        price = float(data.get('price'))
+        stock = int(data.get('stock'))
         barcode = data.get('barcode')
         logger.info(f"Creating product: {name}")
         print(f"Creating product: {name}")
@@ -55,6 +68,10 @@ def get_products():
 def update_product(product_id):
     try:
         data = request.get_json()
+        is_valid, message = validate_product_data(data)
+        if not is_valid:
+            return jsonify({"message": message}), 400
+
         db = next(get_db())
         product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
@@ -63,8 +80,8 @@ def update_product(product_id):
             return jsonify({"message": "Product not found"}), 404
 
         product.name = data.get('name', product.name)
-        product.price = data.get('price', product.price)
-        product.stock = data.get('stock', product.stock)
+        product.price = float(data.get('price', product.price))
+        product.stock = int(data.get('stock', product.stock))
         product.barcode = data.get('barcode', product.barcode)
         db.commit()
         logger.info(f"Product updated: {product_id}")

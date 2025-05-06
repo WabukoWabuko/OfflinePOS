@@ -1,16 +1,19 @@
+
+
 services:
   offlinepos:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5000:5000"  # Flask backend
-      - "8000:8000"  # Flet frontend (web)
+      - "5000:5000"
+      - "8000:8000"
     volumes:
-      - ./offline_pos.db:/app/offline_pos.db
       - ./logs:/app/logs
-    environment:
-      - FLET_HOST=0.0.0.0
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    #command: watchmedo auto-restart --directory=./ --pattern="*.py" --recursive -- python main.py
+      - ./offline_pos.db:/app/offline_pos.db
+    networks:
+      - offlinepos-network
 
+networks:
+  offlinepos-network:
+    driver: bridge

@@ -1,9 +1,11 @@
 import sys
 import flet as ft
+import requests
 from ui_login import build_login_view
 from ui_products import build_products_view
 from ui_sales import build_sales_view
 from ui_settings import build_settings_view
+from ui_customers import build_customers_view
 
 # Add current directory to sys.path to allow local imports
 sys.path.append('/app')
@@ -43,6 +45,8 @@ def main(page: ft.Page):
             page.controls.append(build_sales_view(page, user_id=current_user, language=current_language, show_back=len(nav_history) > 1, go_back=go_back))
         elif current_index == 3:
             page.controls.append(build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=len(nav_history) > 1, go_back=go_back))
+        elif current_index == 4:  # New index for customers
+            page.controls.append(build_customers_view(page, language=current_language, show_back=len(nav_history) > 1, go_back=go_back))
         page.update()
 
     def go_back():
@@ -69,17 +73,32 @@ def main(page: ft.Page):
         page.bgcolor = ft.colors.GREY_100 if current_theme == ft.ThemeMode.LIGHT else ft.colors.GREY_900
         page.update()
 
+    def fetch_analytics():
+        try:
+            response = requests.get("http://offlinepos:5000/api/sales/analytics")
+            if response.status_code == 200:
+                data = response.json()
+                return data
+        except Exception as e:
+            print(f"Analytics fetch error: {str(e)}")
+            return {"total_sales": 0, "sale_count": 0}
+
     def build_dashboard_view(go_back):
+        analytics = fetch_analytics()
         return ft.Container(
             content=ft.Column([
-                ft.Text("Dashboard - Coming Soon", size=20),
                 ft.IconButton(
                     icon=ft.icons.ARROW_BACK,
                     on_click=lambda e: go_back(),
                     tooltip="Back",
                     visible=len(nav_history) > 1
-                )
-            ], alignment=ft.MainAxisAlignment.CENTER),
+                ),
+                ft.Text("Dashboard", size=20, weight=ft.FontWeight.BOLD),
+                ft.Row([
+                    ft.Text(f"Total Sales: ${analytics['total_sales']:.2f}", size=16),
+                    ft.Text(f"Sale Count: {analytics['sale_count']}", size=16)
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
             padding=20,
             bgcolor=ft.colors.WHITE if current_theme == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
             border_radius=15,
@@ -89,10 +108,11 @@ def main(page: ft.Page):
     # Navigation bar
     nav_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationDestination(icon=ft.icons.HOME, label="Home"),
-            ft.NavigationDestination(icon=ft.icons.STORE, label="Products"),
-            ft.NavigationDestination(icon=ft.icons.RECEIPT, label="Sales"),
-            ft.NavigationDestination(icon=ft.icons.SETTINGS, label="Settings"),
+            ft.NavigationBarDestination(icon=ft.icons.HOME, label="Home"),
+            ft.NavigationBarDestination(icon=ft.icons.STORE, label="Products"),
+            ft.NavigationBarDestination(icon=ft.icons.RECEIPT, label="Sales"),
+            ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label="Settings"),
+            ft.NavigationBarDestination(icon=ft.icons.PERSON, label="Customers")
         ],
         on_change=navigate,
         selected_index=0
