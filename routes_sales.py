@@ -1,4 +1,4 @@
-<BS>import logging
+import logging
 from flask import Blueprint, request, jsonify
 from database import SessionLocal
 from models import Product
