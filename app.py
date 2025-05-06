@@ -4,7 +4,8 @@ from routes_products import products_bp
 from routes_sales import sales_bp
 from routes_sync import sync_bp
 from routes_customers import customers_bp
-from database import Base, engine, SessionLocal
+from models import Base
+from database import engine, SessionLocal
 import os
 import logging
 

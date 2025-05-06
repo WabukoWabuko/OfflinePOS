@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from database import Base
 from datetime import datetime
 
+Base = declarative_base()
+
+# Models
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -73,4 +76,4 @@ class CachedSale(Base):
     total_amount = Column(Float, nullable=False)
     payment_method = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    synced = Column(Integer, nullable=False, default=0)  # 0 = pending, 1 = synced
+    synced = Column(Boolean, nullable=False, default=False)  # Changed to Boolean for consistency
