@@ -34,8 +34,6 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
 
     # Local state
     login_feedback = ft.Text("", color=ft.colors.RED)
-
-    # Status text
     status_text = ft.Text("Checking...", color=ft.colors.BLUE)
 
     # Async internet check
@@ -48,7 +46,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             except requests.RequestException:
                 status_text.value = "Offline"
                 status_text.color = ft.colors.RED
-            status_text.update()
+            status_text.update()  # Safe to update after adding to page
             await asyncio.sleep(5)
 
     # Check session
@@ -152,7 +150,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             [
                 back_button,
                 logo,
-                status_text,
+                status_text,  # Add status_text to the page here
                 username_field,
                 password_field,
                 login_button,

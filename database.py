@@ -3,7 +3,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-Base = declarative_base()
+# Guard to prevent redefinition
+if 'Base' not in globals():
+    Base = declarative_base()
 
 # Models
 class User(Base):
@@ -60,7 +62,7 @@ class Customer(Base):
     email = Column(String, unique=True)
     phone = Column(String)
 
-# Database setup
+# Database setup (executed only once)
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////app/offline_pos.db")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

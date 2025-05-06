@@ -22,17 +22,22 @@ app.register_blueprint(sales_bp)
 app.register_blueprint(sync_bp)
 app.register_blueprint(customers_bp)
 
-# Initialize database only once at startup
+# Flag to ensure initialization happens only once
+db_initialized = False
+
 def init_db():
-    logger.info("Attempting to initialize database...")
-    file_exists = os.path.exists("/app/offline_pos.db")
-    logger.info(f"Database file exists: {file_exists}")
-    if not file_exists:
-        logger.info("Creating database tables...")
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables created")
-    else:
-        logger.info("Database file already exists, skipping creation")
+    global db_initialized
+    if not db_initialized:
+        logger.info("Attempting to initialize database...")
+        file_exists = os.path.exists("/app/offline_pos.db")
+        logger.info(f"Database file exists: {file_exists}")
+        if not file_exists:
+            logger.info("Creating database tables...")
+            Base.metadata.create_all(bind=engine)
+            logger.info("Database tables created")
+        else:
+            logger.info("Database file already exists, skipping creation")
+        db_initialized = True
 
 # Call init_db only once
 with app.app_context():
