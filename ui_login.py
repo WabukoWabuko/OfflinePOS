@@ -46,7 +46,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             except requests.RequestException:
                 status_text.value = "Offline"
                 status_text.color = ft.colors.RED
-            status_text.update()  # Safe to update after adding to page
+            status_text.update()
             await asyncio.sleep(5)
 
     # Check session
@@ -133,7 +133,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         width=300,
         bgcolor=ft.colors.BLUE,
         color=ft.colors.WHITE,
-        on_click=lambda e: page.run_task(login_click)
+        on_click=login_click  # Removed lambda and page.run_task, using direct async handler
     )
 
     # Back button
@@ -150,7 +150,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             [
                 back_button,
                 logo,
-                status_text,  # Add status_text to the page here
+                status_text,
                 username_field,
                 password_field,
                 login_button,

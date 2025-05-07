@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO, filename='/app/logs/backend.log', filemo
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your-secret-key-here")  # Required for session
 
 # Register blueprints
 app.register_blueprint(auth_bp)
@@ -48,5 +49,5 @@ with app.app_context():
 if __name__ == "__main__":
     logger.info("Starting Flask backend with live reload on port 5000...")
     server = Server(app.wsgi_app)
-    server.watch('**/*.py')  # Watch all Python files
+    server.watch('**/*.py')
     server.serve(host='0.0.0.0', port=5000, debug=True)

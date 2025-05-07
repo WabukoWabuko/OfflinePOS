@@ -1,6 +1,6 @@
 import logging
 from flask import Blueprint, request, jsonify
-from database import SessionLocal
+from database import SessionLocal, cache_sale
 from models import Sale, SaleItem
 from sqlalchemy.orm import Session
 
@@ -24,6 +24,23 @@ def validate_sale_data(data):
         return False, "Invalid payment_method"
     return True, ""
 
+@sales_bp.route('/cache', methods=['POST'])
+def cache_sale_endpoint():
+    try:
+        data = request.get_json()
+        required_fields = {"user_id", "total_amount", "payment_method"}
+        if not all(k in data for k in required_fields):
+            logger.warning("Cache sale failed: Missing required fields")
+            return jsonify({"message": "Missing required fields: user_id, total_amount, payment_method"}), 400
+
+        db = next(get_db())
+        cache_sale(db, data)
+        logger.info("Sale cached successfully")
+        return jsonify({"message": "Sale cached successfully"}), 201
+    except Exception as e:
+        logger.error(f"Cache sale error: {str(e)}")
+        return jsonify({"message": f"Server error: {str(e)}"}), 500
+
 @sales_bp.route('', methods=['POST'])
 def create_sale():
     try:
@@ -42,7 +59,7 @@ def create_sale():
         db = next(get_db())
         sale = Sale(user_id=user_id, customer_id=customer_id, total_amount=total_amount, payment_method=payment_method)
         db.add(sale)
-        db.flush()  # Get sale.id before committing items
+        db.flush()
 
         for item in items:
             sale_item = SaleItem(sale_id=sale.id, product_id=item.get('product_id'), quantity=item.get('quantity'), unit_price=item.get('unit_price'))
