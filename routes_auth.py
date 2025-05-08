@@ -78,7 +78,6 @@ def login():
             logger.warning(f"Login failed: Username {username} not found")
             return jsonify({"message": "Invalid credentials"}), 401
 
-        # Ensure password_hash is not None and is a string
         if user.password_hash is None:
             logger.error("Login failed: Password hash is None")
             return jsonify({"message": "Server error: Password hash missing"}), 500
@@ -92,4 +91,14 @@ def login():
         return jsonify({"message": "Login successful", "user_id": user.id, "role": user.role}), 200
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
+        return jsonify({"message": f"Server error: {str(e)}"}), 500
+
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    try:
+        session.pop('user_id', None)
+        logger.info("User logged out")
+        return jsonify({"message": "Logout successful"}), 200
+    except Exception as e:
+        logger.error(f"Logout error: {str(e)}")
         return jsonify({"message": f"Server error: {str(e)}"}), 500

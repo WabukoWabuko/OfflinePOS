@@ -9,6 +9,7 @@ from database import engine, SessionLocal
 import os
 import logging
 from livereload import Server
+import secrets
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, filename='/app/logs/backend.log', filemode='a',
@@ -16,7 +17,7 @@ logging.basicConfig(level=logging.INFO, filename='/app/logs/backend.log', filemo
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your-secret-key-here")  # Required for session
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))  # Generate a 64-character hex key
 
 # Register blueprints
 app.register_blueprint(auth_bp)

@@ -36,6 +36,58 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
     login_feedback = ft.Text("", color=ft.colors.RED)
     status_text = ft.Text("Checking...", color=ft.colors.BLUE)
 
+    # Add controls to page initially
+    main_container = ft.Container(
+        content=ft.Column(
+            [
+                ft.IconButton(
+                    icon=ft.icons.ARROW_BACK,
+                    on_click=lambda e: go_back(),
+                    tooltip="Back",
+                    visible=show_back
+                ),
+                ft.Text(lang["title"], size=40, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE),
+                status_text,
+                ft.TextField(
+                    label=lang["username"],
+                    width=300,
+                    border_color=ft.colors.BLUE,
+                    focused_border_color=ft.colors.BLUE_700,
+                    cursor_color=ft.colors.BLUE
+                ),
+                ft.TextField(
+                    label=lang["password"],
+                    password=True,
+                    width=300,
+                    border_color=ft.colors.BLUE,
+                    focused_border_color=ft.colors.BLUE_700,
+                    cursor_color=ft.colors.BLUE
+                ),
+                ft.ElevatedButton(
+                    text=lang["login"],
+                    width=300,
+                    bgcolor=ft.colors.BLUE,
+                    color=ft.colors.WHITE,
+                    on_click=lambda e: login_click(e, page, on_login, login_feedback)
+                ),
+                login_feedback
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=20
+        ),
+        padding=30,
+        bgcolor=ft.colors.WHITE,
+        border_radius=15,
+        shadow=ft.BoxShadow(
+            spread_radius=2,
+            blur_radius=15,
+            color=ft.colors.BLUE_100
+        ),
+        width=350
+    )
+    page.add(main_container)
+
     # Async internet check
     async def monitor_connection():
         while True:
@@ -46,7 +98,6 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             except requests.RequestException:
                 status_text.value = "Offline"
                 status_text.color = ft.colors.RED
-            status_text.update()
             await asyncio.sleep(5)
 
     # Check session
@@ -61,29 +112,11 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         except Exception:
             pass
 
-    # Logo
-    logo = ft.Text(lang["title"], size=40, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE)
-
-    # Input fields
-    username_field = ft.TextField(
-        label=lang["username"],
-        width=300,
-        border_color=ft.colors.BLUE,
-        focused_border_color=ft.colors.BLUE_700,
-        cursor_color=ft.colors.BLUE
-    )
-
-    password_field = ft.TextField(
-        label=lang["password"],
-        password=True,
-        width=300,
-        border_color=ft.colors.BLUE,
-        focused_border_color=ft.colors.BLUE_700,
-        cursor_color=ft.colors.BLUE
-    )
-
     # Login button logic
-    async def login_click(e):
+    async def login_click(e, page, on_login, login_feedback):
+        username_field = page.controls[0].content.controls[3]  # TextField for username
+        password_field = page.controls[0].content.controls[4]  # TextField for password
+
         if not username_field.value or not password_field.value:
             login_feedback.value = lang["fill_fields"]
             login_feedback.color = ft.colors.RED
@@ -128,51 +161,8 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
                 break
         login_feedback.update()
 
-    login_button = ft.ElevatedButton(
-        text=lang["login"],
-        width=300,
-        bgcolor=ft.colors.BLUE,
-        color=ft.colors.WHITE,
-        on_click=login_click  # Removed lambda and page.run_task, using direct async handler
-    )
-
-    # Back button
-    back_button = ft.IconButton(
-        icon=ft.icons.ARROW_BACK,
-        on_click=lambda e: go_back(),
-        tooltip="Back",
-        visible=show_back
-    )
-
-    # Layout container
-    main_container = ft.Container(
-        content=ft.Column(
-            [
-                back_button,
-                logo,
-                status_text,
-                username_field,
-                password_field,
-                login_button,
-                login_feedback
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20
-        ),
-        padding=30,
-        bgcolor=ft.colors.WHITE,
-        border_radius=15,
-        shadow=ft.BoxShadow(
-            spread_radius=2,
-            blur_radius=15,
-            color=ft.colors.BLUE_100
-        ),
-        width=350
-    )
-
-    # Start the async connection monitor after the container is built
+    # Start the async connection monitor and check session
     check_session()
-    page.run_task(monitor_connection)
+    page.run_task(monitor_connection())
 
     return main_container

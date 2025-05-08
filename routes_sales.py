@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from database import SessionLocal, cache_sale
 from models import Sale, SaleItem
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 sales_bp = Blueprint('sales', __name__, url_prefix='/api/sales')
 logger = logging.getLogger(__name__)
@@ -23,6 +24,18 @@ def validate_sale_data(data):
     if data["payment_method"] not in ["Cash", "Card"]:
         return False, "Invalid payment_method"
     return True, ""
+
+@sales_bp.route('/analytics', methods=['GET'])
+def get_analytics():
+    try:
+        db = next(get_db())
+        total_sales = db.query(func.sum(Sale.total_amount)).scalar() or 0
+        sale_count = db.query(func.count(Sale.id)).scalar() or 0
+        logger.info("Fetched sales analytics")
+        return jsonify({"total_sales": float(total_sales), "sale_count": int(sale_count)}), 200
+    except Exception as e:
+        logger.error(f"Get analytics error: {str(e)}")
+        return jsonify({"message": "Server error"}), 500
 
 @sales_bp.route('/cache', methods=['POST'])
 def cache_sale_endpoint():

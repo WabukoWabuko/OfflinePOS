@@ -42,25 +42,28 @@ def main(page: ft.Page):
             else:
                 page.controls.append(build_dashboard_view(go_back=go_back))
         elif current_index == 1:
-            page.controls.append(build_products_view(page, language=current_language, show_back=len(nav_history) > 1, go_back=go_back))
+            page.controls.append(build_products_view(page, language=current_language, show_back=True, go_back=go_back))
         elif current_index == 2:
-            page.controls.append(build_sales_view(page, user_id=current_user, language=current_language, show_back=len(nav_history) > 1, go_back=go_back))
+            page.controls.append(build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back))
         elif current_index == 3:
-            page.controls.append(build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=len(nav_history) > 1, go_back=go_back))
+            page.controls.append(build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back))
         elif current_index == 4:
-            page.controls.append(build_customers_view(page, language=current_language, show_back=len(nav_history) > 1, go_back=go_back))
+            page.controls.append(build_customers_view(page, language=current_language, show_back=True, go_back=go_back))
         page.update()
 
     def go_back():
         if len(nav_history) > 1:
             nav_history.pop()
-            navigate(None)
+            if nav_history[-1] == 0 and current_user:
+                navigate(None)  # Return to dashboard
+            else:
+                navigate(None)
 
     def on_login(user_id, role):
         nonlocal current_user, current_role
         current_user = user_id
         current_role = role
-        nav_history.append(0)
+        nav_history = [0]  # Reset navigation to dashboard
         navigate(None)
 
     def update_language(lang):
@@ -82,18 +85,26 @@ def main(page: ft.Page):
                 return response.json()
         except Exception as e:
             print(f"Analytics fetch error: {str(e)}")
-            return {"total_sales": 0, "sale_count": 0}
+        return {"total_sales": 0, "sale_count": 0}
 
     def build_dashboard_view(go_back):
         analytics = fetch_analytics()
         return ft.Container(
             content=ft.Column([
-                ft.IconButton(
-                    icon=ft.icons.ARROW_BACK,
-                    on_click=lambda e: go_back(),
-                    tooltip="Back",
-                    visible=len(nav_history) > 1
-                ),
+                ft.Row([
+                    ft.IconButton(
+                        icon=ft.icons.ARROW_BACK,
+                        on_click=lambda e: go_back(),
+                        tooltip="Back",
+                        visible=len(nav_history) > 1
+                    ),
+                    ft.ElevatedButton(
+                        text="Logout",
+                        on_click=lambda e: logout(),
+                        bgcolor=ft.colors.RED,
+                        color=ft.colors.WHITE
+                    )
+                ]),
                 ft.Text("Dashboard", size=20, weight=ft.FontWeight.BOLD),
                 ft.Row([
                     ft.Text(f"Total Sales: ${analytics['total_sales']:.2f}", size=16),
@@ -105,6 +116,14 @@ def main(page: ft.Page):
             border_radius=15,
             shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100)
         )
+
+    def logout():
+        nonlocal current_user, current_role
+        current_user = None
+        current_role = None
+        nav_history = [0]
+        requests.post("http://offlinepos:5000/api/logout")  # Optional, if backend has logout
+        navigate(None)
 
     # Navigation bar
     nav_bar = ft.NavigationBar(
