@@ -1,6 +1,6 @@
 import flet as ft
 
-def build_settings_view(page, theme_mode, current_theme, language="en", on_language_change=None, on_theme_change=None, show_back=False, go_back=None):
+def build_settings_view(page, theme_mode, current_theme, language, on_language_change, on_theme_change, show_back=False, go_back=None):
     texts = {
         "en": {
             "title": "Settings",
@@ -9,7 +9,8 @@ def build_settings_view(page, theme_mode, current_theme, language="en", on_langu
             "dark": "Dark",
             "language": "Language",
             "english": "English",
-            "french": "French"
+            "french": "French",
+            "spanish": "Spanish"
         },
         "fr": {
             "title": "Paramètres",
@@ -18,44 +19,48 @@ def build_settings_view(page, theme_mode, current_theme, language="en", on_langu
             "dark": "Sombre",
             "language": "Langue",
             "english": "Anglais",
-            "french": "Français"
+            "french": "Français",
+            "spanish": "Espagnol"
+        },
+        "es": {
+            "title": "Configuración",
+            "theme": "Tema",
+            "light": "Claro",
+            "dark": "Oscuro",
+            "language": "Idioma",
+            "english": "Inglés",
+            "french": "Francés",
+            "spanish": "Español"
         }
     }
     lang = texts[language]
-
-    def update_theme(e):
-        new_theme = ft.ThemeMode.LIGHT if theme_dropdown.value == lang["light"] else ft.ThemeMode.DARK
-        on_theme_change(new_theme)
-
-    def update_language(e):
-        new_lang = "en" if language_dropdown.value == lang["english"] else "fr"
-        on_language_change(new_lang)
 
     theme_dropdown = ft.Dropdown(
         label=lang["theme"],
         width=200,
         options=[
-            ft.dropdown.Option(lang["light"]),
-            ft.dropdown.Option(lang["dark"])
+            ft.dropdown.Option(lang["light"], key="light"),
+            ft.dropdown.Option(lang["dark"], key="dark")
         ],
-        value=lang["light"] if current_theme == ft.ThemeMode.LIGHT else lang["dark"],
-        on_change=update_theme,
+        value="light" if current_theme == ft.ThemeMode.LIGHT else "dark",
         border_color=ft.colors.BLUE,
-        focused_border_color=ft.colors.BLUE_700
+        on_change=lambda e: on_theme_change(ft.ThemeMode.LIGHT if e.control.value == "light" else ft.ThemeMode.DARK)
     )
 
     language_dropdown = ft.Dropdown(
         label=lang["language"],
         width=200,
         options=[
-            ft.dropdown.Option(lang["english"]),
-            ft.dropdown.Option(lang["french"])
+            ft.dropdown.Option(lang["english"], key="en"),
+            ft.dropdown.Option(lang["french"], key="fr"),
+            ft.dropdown.Option(lang["spanish"], key="es")
         ],
-        value=lang["english"] if language == "en" else lang["french"],
-        on_change=update_language,
+        value=language,
         border_color=ft.colors.BLUE,
-        focused_border_color=ft.colors.BLUE_700
+        on_change=lambda e: on_language_change(e.control.value)
     )
+
+    bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
 
     return ft.Container(
         content=ft.Column([
@@ -65,12 +70,13 @@ def build_settings_view(page, theme_mode, current_theme, language="en", on_langu
                 tooltip="Back",
                 visible=show_back
             ),
-            ft.Text(lang["title"], size=20, weight=ft.FontWeight.BOLD),
+            ft.Text(lang["title"], size=24, weight=ft.FontWeight.BOLD, text_align="center"),
             theme_dropdown,
             language_dropdown
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
         padding=20,
-        bgcolor=ft.colors.WHITE,
+        bgcolor=bgcolor,
         border_radius=15,
-        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100)
+        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900),
+        animate_opacity=500  # Smooth transition for theme change
     )

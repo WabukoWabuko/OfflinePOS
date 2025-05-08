@@ -1,6 +1,7 @@
 import sys
 import flet as ft
 import requests
+import asyncio
 from ui_login import build_login_view
 from ui_products import build_products_view, build_products_view_unauthorized
 from ui_sales import build_sales_view, build_sales_view_unauthorized
@@ -64,22 +65,26 @@ def main(page: ft.Page):
                 content, populate = build_products_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
+                start_polling(populate)
                 populate()
             else:
                 content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
+                start_polling(populate)
                 populate()
         elif current_index == 2:
             if not current_user:
                 content, populate = build_sales_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
+                start_polling(populate)
                 populate()
             else:
                 content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
+                start_polling(populate)
                 populate()
         elif current_index == 3:
             content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
@@ -90,12 +95,19 @@ def main(page: ft.Page):
                 content, populate = build_customers_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
+                start_polling(populate)
                 populate()
             else:
                 content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
+                start_polling(populate)
                 populate()
+
+    async def start_polling(populate_func):
+        while nav_bar.selected_index == nav_history[-1]:
+            await asyncio.sleep(30)  # Poll every 30 seconds
+            populate_func()
 
     def go_back():
         if len(nav_history) > 1:
@@ -130,9 +142,51 @@ def main(page: ft.Page):
             print(f"Analytics fetch error: {str(e)}")
         return {"total_sales": 0, "sale_count": 0}
 
+    def fetch_sales_data_for_chart():
+        try:
+            response = requests.get("http://localhost:5000/api/sales")
+            if response.status_code == 200:
+                sales = response.json().get("sales", [])
+                # Aggregate sales by date (simplified for demo)
+                sales_by_date = {}
+                for sale in sales:
+                    date = sale['created_at'].split('T')[0]
+                    sales_by_date[date] = sales_by_date.get(date, 0) + sale['total_amount']
+                dates = list(sales_by_date.keys())[-5:]  # Last 5 dates
+                amounts = [sales_by_date[date] for date in dates]
+                return dates, amounts
+        except Exception as e:
+            print(f"Sales chart fetch error: {str(e)}")
+        return [], []
+
     def build_dashboard_view(go_back):
         analytics = fetch_analytics()
+        dates, amounts = fetch_sales_data_for_chart()
         bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
+
+        # Create a simple line chart using matplotlib on a canvas
+        chart_script = f"""
+import matplotlib.pyplot as plt
+dates = {dates}
+amounts = {amounts}
+plt.figure(figsize=(6, 4))
+plt.plot(dates, amounts, marker='o', color='blue')
+plt.title('Sales Trend')
+plt.xlabel('Date')
+plt.ylabel('Total Amount ($)')
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('sales_trend.png')
+"""
+        chart_container = ft.Canvas(
+            content=ft.Text("Loading chart..."),
+            script=chart_script,
+            script_language="python",
+            height=300,
+            width=400
+        )
+
         return ft.Container(
             content=ft.Column([
                 ft.Row([
@@ -153,7 +207,8 @@ def main(page: ft.Page):
                 ft.Row([
                     ft.Text(f"Total Sales: ${analytics['total_sales']:.2f}", size=16),
                     ft.Text(f"Sale Count: {analytics['sale_count']}", size=16)
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+                chart_container
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
             padding=20,
             bgcolor=bgcolor,
