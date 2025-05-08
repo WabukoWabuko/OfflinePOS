@@ -73,7 +73,7 @@ def build_settings_view(page, theme_mode, current_theme, language, on_language_c
             ft.Text(lang["title"], size=24, weight=ft.FontWeight.BOLD, text_align="center"),
             theme_dropdown,
             language_dropdown
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20, scroll=ft.ScrollMode.AUTO),
         padding=20,
         bgcolor=bgcolor,
         border_radius=15,

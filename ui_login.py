@@ -211,7 +211,8 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20
+            spacing=20,
+            scroll=ft.ScrollMode.AUTO  # Make the login view scrollable
         ),
         padding=30,
         bgcolor=bgcolor,

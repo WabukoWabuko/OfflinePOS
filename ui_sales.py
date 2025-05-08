@@ -238,12 +238,11 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             feedback,
             ft.Container(
                 content=sales_list,
-                height=300,  # Fixed height to enable scrolling
                 padding=10,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=10
             )
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20, scroll=ft.ScrollMode.AUTO),
         padding=20,
         bgcolor=bgcolor,
         border_radius=15,
@@ -542,12 +541,11 @@ def build_sales_view_unauthorized(page, language="en", show_back=False, go_back=
             feedback,
             ft.Container(
                 content=sales_list,
-                height=300,  # Fixed height to enable scrolling
                 padding=10,
                 border=ft.border.all(1, ft.colors.GREY_300),
                 border_radius=10
             )
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20, scroll=ft.ScrollMode.AUTO),
         padding=20,
         bgcolor=bgcolor,
         border_radius=15,
