@@ -39,8 +39,8 @@ def build_settings_view(page, theme_mode, current_theme, language, on_language_c
         label=lang["theme"],
         width=200,
         options=[
-            ft.dropdown.Option(lang["light"], key="light"),
-            ft.dropdown.Option(lang["dark"], key="dark")
+            ft.dropdown.Option(text=lang["light"], key="light"),
+            ft.dropdown.Option(text=lang["dark"], key="dark")
         ],
         value="light" if current_theme == ft.ThemeMode.LIGHT else "dark",
         border_color=ft.colors.BLUE,
@@ -51,9 +51,9 @@ def build_settings_view(page, theme_mode, current_theme, language, on_language_c
         label=lang["language"],
         width=200,
         options=[
-            ft.dropdown.Option(lang["english"], key="en"),
-            ft.dropdown.Option(lang["french"], key="fr"),
-            ft.dropdown.Option(lang["spanish"], key="es")
+            ft.dropdown.Option(text=lang["english"], key="en"),
+            ft.dropdown.Option(text=lang["french"], key="fr"),
+            ft.dropdown.Option(text=lang["spanish"], key="es")
         ],
         value=language,
         border_color=ft.colors.BLUE,

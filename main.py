@@ -65,26 +65,26 @@ def main(page: ft.Page):
                 content, populate = build_products_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
-                start_polling(populate)
+                page.run_task(start_polling(populate))
                 populate()
             else:
                 content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
-                start_polling(populate)
+                page.run_task(start_polling(populate))
                 populate()
         elif current_index == 2:
             if not current_user:
                 content, populate = build_sales_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
-                start_polling(populate)
+                page.run_task(start_polling(populate))
                 populate()
             else:
                 content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
-                start_polling(populate)
+                page.run_task(start_polling(populate))
                 populate()
         elif current_index == 3:
             content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
@@ -95,13 +95,13 @@ def main(page: ft.Page):
                 content, populate = build_customers_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
-                start_polling(populate)
+                page.run_task(start_polling(populate))
                 populate()
             else:
                 content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
-                start_polling(populate)
+                page.run_task(start_polling(populate))
                 populate()
 
     async def start_polling(populate_func):
