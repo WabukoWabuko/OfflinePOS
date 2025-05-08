@@ -28,6 +28,19 @@ def main(page: ft.Page):
     theme_mode = ft.Ref()
     nav_history = [0]
 
+    # Navigation bar
+    nav_bar = ft.NavigationBar(
+        destinations=[
+            ft.NavigationBarDestination(icon=ft.icons.HOME, label="Home"),
+            ft.NavigationBarDestination(icon=ft.icons.STORE, label="Products"),
+            ft.NavigationBarDestination(icon=ft.icons.RECEIPT, label="Sales"),
+            ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label="Settings"),
+            ft.NavigationBarDestination(icon=ft.icons.PERSON, label="Customers")
+        ],
+        on_change=lambda e: navigate(e),
+        selected_index=0
+    )
+
     def navigate(e):
         if e is not None:
             new_index = nav_bar.selected_index
@@ -36,28 +49,32 @@ def main(page: ft.Page):
         page.controls.clear()
         current_index = nav_history[-1]
         nav_bar.selected_index = current_index
+        content = None
         if current_index == 0:
             if not current_user:
-                page.controls.append(build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back))
+                content = build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)
             else:
-                page.controls.append(build_dashboard_view(go_back=go_back))
+                content = build_dashboard_view(go_back=go_back)
         elif current_index == 1:
-            page.controls.append(build_products_view(page, language=current_language, show_back=True, go_back=go_back))
+            content = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
         elif current_index == 2:
-            page.controls.append(build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back))
+            content = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
         elif current_index == 3:
-            page.controls.append(build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back))
+            content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
         elif current_index == 4:
-            page.controls.append(build_customers_view(page, language=current_language, show_back=True, go_back=go_back))
+            content = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
+        
+        # Always add the navigation bar and the content
+        page.controls.append(ft.Column([
+            nav_bar,
+            content
+        ]))
         page.update()
 
     def go_back():
         if len(nav_history) > 1:
             nav_history.pop()
-            if nav_history[-1] == 0 and current_user:
-                navigate(None)  # Return to dashboard
-            else:
-                navigate(None)
+            navigate(None)
 
     def on_login(user_id, role):
         nonlocal current_user, current_role
@@ -122,21 +139,8 @@ def main(page: ft.Page):
         current_user = None
         current_role = None
         nav_history = [0]
-        requests.post("http://offlinepos:5000/api/logout")  # Optional, if backend has logout
+        requests.post("http://offlinepos:5000/api/logout")
         navigate(None)
-
-    # Navigation bar
-    nav_bar = ft.NavigationBar(
-        destinations=[
-            ft.NavigationBarDestination(icon=ft.icons.HOME, label="Home"),
-            ft.NavigationBarDestination(icon=ft.icons.STORE, label="Products"),
-            ft.NavigationBarDestination(icon=ft.icons.RECEIPT, label="Sales"),
-            ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label="Settings"),
-            ft.NavigationBarDestination(icon=ft.icons.PERSON, label="Customers")
-        ],
-        on_change=navigate,
-        selected_index=0
-    )
 
     # Initial view
     page.add(

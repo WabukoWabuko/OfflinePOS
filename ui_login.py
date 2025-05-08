@@ -86,19 +86,18 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         ),
         width=350
     )
-    page.add(main_container)
 
     # Async internet check
     async def monitor_connection():
-        while True:
-            try:
-                requests.get("https://www.google.com", timeout=3)
-                status_text.value = "Online"
-                status_text.color = ft.colors.GREEN
-            except requests.RequestException:
-                status_text.value = "Offline"
-                status_text.color = ft.colors.RED
-            await asyncio.sleep(5)
+        try:
+            response = requests.get("https://www.google.com", timeout=3)
+            status_text.value = "Online"
+            status_text.color = ft.colors.GREEN
+        except requests.RequestException:
+            status_text.value = "Offline"
+            status_text.color = ft.colors.RED
+        status_text.update()
+        await asyncio.sleep(5)
 
     # Check session
     def check_session():
@@ -163,6 +162,6 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
 
     # Start the async connection monitor and check session
     check_session()
-    page.run_task(monitor_connection())
+    page.run_task(monitor_connection)
 
     return main_container

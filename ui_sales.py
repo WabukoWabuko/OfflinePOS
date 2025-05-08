@@ -40,6 +40,17 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
     sales_list = ft.ListView(expand=True, spacing=10)
     feedback = ft.Text("", color=ft.colors.RED)
 
+    def fetch_analytics():
+        try:
+            response = requests.get("http://offlinepos:5000/api/sales/analytics")
+            if response.status_code == 200:
+                return response.json()
+        except Exception as e:
+            feedback.value = lang["fetch_error"]
+            feedback.color = ft.colors.RED
+            feedback.update()
+        return {"total_sales": 0, "sale_count": 0}
+
     def fetch_sales():
         try:
             response = requests.get("http://offlinepos:5000/api/sales")
@@ -69,9 +80,10 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
 
     def create_sale(e):
         try:
-            total_amount = float(total_amount_field.value)
-            payment_method = payment_method_dropdown.value
-            if not total_amount or not payment_method:
+            total_amount_field = page.controls[0].content.controls[3]  # Total amount field
+            payment_method_dropdown = page.controls[0].content.controls[4]  # Payment method dropdown
+
+            if not total_amount_field.value or not payment_method_dropdown.value:
                 feedback.value = "Please fill all fields"
                 feedback.color = ft.colors.RED
                 feedback.update()
@@ -80,8 +92,8 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             response = requests.post(
                 "http://offlinepos:5000/api/sales",
                 json={
-                    "total_amount": total_amount,
-                    "payment_method": payment_method,
+                    "total_amount": float(total_amount_field.value),
+                    "payment_method": payment_method_dropdown.value,
                     "user_id": user_id,
                     "items": []
                 }
@@ -99,36 +111,11 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             feedback.color = ft.colors.RED
             feedback.update()
 
-    analytics = fetch_sales()  # Note: This should use fetch_analytics from main.py, but we'll handle it here for now
-    total_sales = sum(sale["total_amount"] for sale in analytics) if analytics else 0
-    sale_count = len(analytics) if analytics else 0
+    analytics = fetch_analytics()
+    total_sales = analytics["total_sales"]
+    sale_count = analytics["sale_count"]
 
-    total_amount_field = ft.TextField(
-        label=lang["total_amount"],
-        width=200,
-        border_color=ft.colors.BLUE,
-        focused_border_color=ft.colors.BLUE_700,
-        cursor_color=ft.colors.BLUE
-    )
-
-    payment_method_dropdown = ft.Dropdown(
-        label=lang["payment_method"],
-        width=200,
-        options=[
-            ft.dropdown.Option(lang["cash"]),
-            ft.dropdown.Option(lang["card"])
-        ],
-        border_color=ft.colors.BLUE,
-        focused_border_color=ft.colors.BLUE_700
-    )
-
-    create_sale_button = ft.ElevatedButton(
-        text=lang["add_sale"],
-        width=200,
-        bgcolor=ft.colors.BLUE,
-        color=ft.colors.WHITE,
-        on_click=create_sale
-    )
+    populate_sales()
 
     return ft.Container(
         content=ft.Column([
@@ -143,9 +130,30 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
                 ft.Text(f"{lang['total_sales']}: ${total_sales:.2f}", size=16),
                 ft.Text(f"{lang['sale_count']}: {sale_count}", size=16)
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
-            total_amount_field,
-            payment_method_dropdown,
-            create_sale_button,
+            ft.TextField(
+                label=lang["total_amount"],
+                width=200,
+                border_color=ft.colors.BLUE,
+                focused_border_color=ft.colors.BLUE_700,
+                cursor_color=ft.colors.BLUE
+            ),
+            ft.Dropdown(
+                label=lang["payment_method"],
+                width=200,
+                options=[
+                    ft.dropdown.Option(lang["cash"]),
+                    ft.dropdown.Option(lang["card"])
+                ],
+                border_color=ft.colors.BLUE,
+                focused_border_color=ft.colors.BLUE_700
+            ),
+            ft.ElevatedButton(
+                text=lang["add_sale"],
+                width=200,
+                bgcolor=ft.colors.BLUE,
+                color=ft.colors.WHITE,
+                on_click=create_sale
+            ),
             feedback,
             sales_list
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
