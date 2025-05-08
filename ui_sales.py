@@ -1,6 +1,5 @@
 import flet as ft
 import requests
-import json
 
 def build_sales_view(page, user_id, language="en", show_back=False, go_back=None):
     texts = {
@@ -42,25 +41,23 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
 
     def fetch_analytics():
         try:
-            response = requests.get("http://offlinepos:5000/api/sales/analytics")
+            response = requests.get("[invalid url, do not cite])
             if response.status_code == 200:
                 return response.json()
         except Exception as e:
             feedback.value = lang["fetch_error"]
             feedback.color = ft.colors.RED
-            feedback.update()
-        return {"total_sales": 0, "sale_count": 0}
+            return {"total_sales": 0, "sale_count": 0}
 
     def fetch_sales():
         try:
-            response = requests.get("http://offlinepos:5000/api/sales")
+            response = requests.get("[invalid url, do not cite])
             if response.status_code == 200:
                 return response.json().get("sales", [])
         except Exception as e:
             feedback.value = lang["fetch_error"]
             feedback.color = ft.colors.RED
-            feedback.update()
-        return []
+            return []
 
     def populate_sales():
         sales_list.controls.clear()
@@ -90,7 +87,7 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
                 return
 
             response = requests.post(
-                "http://offlinepos:5000/api/sales",
+                "[invalid url, do not cite],
                 json={
                     "total_amount": float(total_amount_field.value),
                     "payment_method": payment_method_dropdown.value,
@@ -115,9 +112,9 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
     total_sales = analytics["total_sales"]
     sale_count = analytics["sale_count"]
 
-    populate_sales()
+    bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
 
-    return ft.Container(
+    container = ft.Container(
         content=ft.Column([
             ft.IconButton(
                 icon=ft.icons.ARROW_BACK,
@@ -158,7 +155,9 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             sales_list
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
         padding=20,
-        bgcolor=ft.colors.WHITE,
+        bgcolor=bgcolor,
         border_radius=15,
-        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100)
+        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900)
     )
+
+    return container, populate_sales

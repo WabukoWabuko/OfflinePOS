@@ -35,14 +35,13 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
 
     def fetch_products():
         try:
-            response = requests.get("http://offlinepos:5000/api/products")
+            response = requests.get("[invalid url, do not cite])
             if response.status_code == 200:
                 return response.json().get("products", [])
         except Exception as e:
             feedback.value = lang["fetch_error"]
             feedback.color = ft.colors.RED
-            feedback.update()
-        return []
+            return []
 
     def populate_products():
         products_list.controls.clear()
@@ -73,7 +72,7 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
                 return
 
             response = requests.post(
-                "http://offlinepos:5000/api/products",
+                "[invalid url, do not cite],
                 json={
                     "name": name_field.value,
                     "price": float(price_field.value),
@@ -94,9 +93,9 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
             feedback.color = ft.colors.RED
             feedback.update()
 
-    populate_products()
+    bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
 
-    return ft.Container(
+    container = ft.Container(
         content=ft.Column([
             ft.IconButton(
                 icon=ft.icons.ARROW_BACK,
@@ -120,7 +119,9 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
             products_list
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
         padding=20,
-        bgcolor=ft.colors.WHITE,
+        bgcolor=bgcolor,
         border_radius=15,
-        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100)
+        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900)
     )
+
+    return container, populate_products

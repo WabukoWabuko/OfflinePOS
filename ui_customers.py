@@ -33,14 +33,12 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
 
     def fetch_customers():
         try:
-            response = requests.get("http://offlinepos:5000/api/customers")
+            response = requests.get("[invalid url, do not cite])
             if response.status_code == 200:
                 return response.json().get("customers", [])
         except Exception as e:
-            feedback.value = lang["fetch_error"]
-            feedback.color = ft.colors.RED
-            feedback.update()
-        return []
+            print(f"Fetch customers error: {str(e)}")
+            return []
 
     def populate_customers():
         customers_list.controls.clear()
@@ -52,7 +50,7 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
                 customers_list.controls.append(
                     ft.ListTile(
                         title=ft.Text(f"{customer['name']}"),
-                        subtitle=ft.Text(f"Email: {customer['email'] or 'N/A'}, Phone: {customer['phone'] or 'N/A'}")
+                        subtitle=ft.Text(f"Email: {customer.get('email', 'N/A')}, Phone: {customer.get('phone', 'N/A')}")
                     )
                 )
         customers_list.update()
@@ -70,7 +68,7 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
                 return
 
             response = requests.post(
-                "http://offlinepos:5000/api/customers",
+                "[invalid url, do not cite],
                 json={
                     "name": name_field.value,
                     "email": email_field.value,
@@ -90,9 +88,9 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
             feedback.color = ft.colors.RED
             feedback.update()
 
-    populate_customers()
+    bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
 
-    return ft.Container(
+    container = ft.Container(
         content=ft.Column([
             ft.IconButton(
                 icon=ft.icons.ARROW_BACK,
@@ -101,9 +99,27 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
                 visible=show_back
             ),
             ft.Text(lang["title"], size=20, weight=ft.FontWeight.BOLD),
-            ft.TextField(label=lang["name"], width=200, border_color=ft.colors.BLUE),
-            ft.TextField(label=lang["email"], width=200, border_color=ft.colors.BLUE),
-            ft.TextField(label=lang["phone"], width=200, border_color=ft.colors.BLUE),
+            ft.TextField(
+                label=lang["name"],
+                width=200,
+                border_color=ft.colors.BLUE,
+                focused_border_color=ft.colors.BLUE_700,
+                cursor_color=ft.colors.BLUE
+            ),
+            ft.TextField(
+                label=lang["email"],
+                width=200,
+                border_color=ft.colors.BLUE,
+                focused_border_color=ft.colors.BLUE_700,
+                cursor_color=ft.colors.BLUE
+            ),
+            ft.TextField(
+                label=lang["phone"],
+                width=200,
+                border_color=ft.colors.BLUE,
+                focused_border_color=ft.colors.BLUE_700,
+                cursor_color=ft.colors.BLUE
+            ),
             ft.ElevatedButton(
                 text=lang["add_customer"],
                 width=200,
@@ -115,7 +131,13 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
             customers_list
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
         padding=20,
-        bgcolor=ft.colors.WHITE,
+        bgcolor=bgcolor,
         border_radius=15,
-        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100)
+        shadow=ft.BoxShadow(
+            spread_radius=2,
+            blur_radius=15,
+            color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900
+        )
     )
+
+    return container, populate_customers

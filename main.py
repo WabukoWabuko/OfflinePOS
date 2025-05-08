@@ -49,27 +49,35 @@ def main(page: ft.Page):
         page.controls.clear()
         current_index = nav_history[-1]
         nav_bar.selected_index = current_index
-        content = None
         if current_index == 0:
             if not current_user:
-                content = build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)
+                content, start_monitoring = build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                start_monitoring()
             else:
                 content = build_dashboard_view(go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
         elif current_index == 1:
-            content = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
+            content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
+            page.controls.append(ft.Column([nav_bar, content]))
+            page.update()
+            populate()
         elif current_index == 2:
-            content = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
+            content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
+            page.controls.append(ft.Column([nav_bar, content]))
+            page.update()
+            populate()
         elif current_index == 3:
             content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
+            page.controls.append(ft.Column([nav_bar, content]))
+            page.update()
         elif current_index == 4:
-            content = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
-        
-        # Always add the navigation bar and the content
-        page.controls.append(ft.Column([
-            nav_bar,
-            content
-        ]))
-        page.update()
+            content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
+            page.controls.append(ft.Column([nav_bar, content]))
+            page.update()
+            populate()
 
     def go_back():
         if len(nav_history) > 1:
@@ -93,11 +101,11 @@ def main(page: ft.Page):
         current_theme = new_theme
         page.theme_mode = current_theme
         page.bgcolor = ft.colors.GREY_100 if current_theme == ft.ThemeMode.LIGHT else ft.colors.GREY_900
-        page.update()
+        navigate(None)  # Rebuild current view with new theme
 
     def fetch_analytics():
         try:
-            response = requests.get("http://offlinepos:5000/api/sales/analytics")
+            response = requests.get("[invalid url, do not cite])
             if response.status_code == 200:
                 return response.json()
         except Exception as e:
@@ -106,6 +114,7 @@ def main(page: ft.Page):
 
     def build_dashboard_view(go_back):
         analytics = fetch_analytics()
+        bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
         return ft.Container(
             content=ft.Column([
                 ft.Row([
@@ -129,9 +138,9 @@ def main(page: ft.Page):
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
             padding=20,
-            bgcolor=ft.colors.WHITE if current_theme == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+            bgcolor=bgcolor,
             border_radius=15,
-            shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100)
+            shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900)
         )
 
     def logout():
@@ -139,14 +148,14 @@ def main(page: ft.Page):
         current_user = None
         current_role = None
         nav_history = [0]
-        requests.post("http://offlinepos:5000/api/logout")
+        requests.post("[invalid url, do not cite])
         navigate(None)
 
     # Initial view
     page.add(
         ft.Column([
             nav_bar,
-            build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)
+            build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)[0]
         ])
     )
 
