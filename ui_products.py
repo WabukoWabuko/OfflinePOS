@@ -50,12 +50,16 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
         else:
             for product in products:
                 products_list.controls.append(
-                    ft.ListTile(
-                        leading=ft.Icon(ft.icons.SHOPPING_BAG),
-                        title=ft.Text(product['name'], size=16, weight=ft.FontWeight.BOLD),
-                        subtitle=ft.Text(f"Price: ${product['price']:.2f} | Stock: {product['stock']} | Barcode: {product['barcode']}", size=14),
-                        content_padding=ft.padding.only(left=10, right=10),
-                        tile_color=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
+                    ft.Container(
+                        content=ft.ListTile(
+                            leading=ft.Icon(ft.icons.SHOPPING_BAG),
+                            title=ft.Text(product['name'], size=16, weight=ft.FontWeight.BOLD),
+                            subtitle=ft.Text(f"Price: ${product['price']:.2f} | Stock: {product['stock']} | Barcode: {product['barcode']}", size=14),
+                            content_padding=ft.padding.only(left=10, right=10),
+                        ),
+                        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+                        border_radius=5,
+                        padding=5
                     )
                 )
         products_list.update()
@@ -118,6 +122,78 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
                 on_click=create_product
             ),
             feedback,
+            ft.Container(
+                content=products_list,
+                padding=10,
+                border=ft.border.all(1, ft.colors.GREY_300),
+                border_radius=10
+            )
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+        padding=20,
+        bgcolor=bgcolor,
+        border_radius=15,
+        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900)
+    )
+
+    return container, populate_products
+
+def build_products_view_unauthorized(page, language="en", show_back=False, go_back=None):
+    texts = {
+        "en": {
+            "title": "Products",
+            "no_products": "No products available"
+        },
+        "fr": {
+            "title": "Produits",
+            "no_products": "Aucun produit disponible"
+        }
+    }
+    lang = texts[language]
+
+    products_list = ft.ListView(expand=True, spacing=10)
+
+    def fetch_products():
+        try:
+            response = requests.get("http://localhost:5000/api/products")
+            if response.status_code == 200:
+                return response.json().get("products", [])
+        except Exception as e:
+            print(f"Fetch products error: {str(e)}")
+            return []
+
+    def populate_products():
+        products_list.controls.clear()
+        products = fetch_products()
+        if not products:
+            products_list.controls.append(ft.Text(lang["no_products"], size=16, text_align="center"))
+        else:
+            for product in products:
+                products_list.controls.append(
+                    ft.Container(
+                        content=ft.ListTile(
+                            leading=ft.Icon(ft.icons.SHOPPING_BAG),
+                            title=ft.Text(product['name'], size=16, weight=ft.FontWeight.BOLD),
+                            subtitle=ft.Text(f"Price: ${product['price']:.2f} | Stock: {product['stock']} | Barcode: {product['barcode']}", size=14),
+                            content_padding=ft.padding.only(left=10, right=10),
+                        ),
+                        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+                        border_radius=5,
+                        padding=5
+                    )
+                )
+        products_list.update()
+
+    bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
+
+    container = ft.Container(
+        content=ft.Column([
+            ft.IconButton(
+                icon=ft.icons.ARROW_BACK,
+                on_click=lambda e: go_back(),
+                tooltip="Back",
+                visible=show_back
+            ),
+            ft.Text(lang["title"], size=24, weight=ft.FontWeight.BOLD, text_align="center"),
             ft.Container(
                 content=products_list,
                 padding=10,

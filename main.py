@@ -2,10 +2,10 @@ import sys
 import flet as ft
 import requests
 from ui_login import build_login_view
-from ui_products import build_products_view
-from ui_sales import build_sales_view
+from ui_products import build_products_view, build_products_view_unauthorized
+from ui_sales import build_sales_view, build_sales_view_unauthorized
 from ui_settings import build_settings_view
-from ui_customers import build_customers_view
+from ui_customers import build_customers_view, build_customers_view_unauthorized
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -60,24 +60,42 @@ def main(page: ft.Page):
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
         elif current_index == 1:
-            content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
-            page.controls.append(ft.Column([nav_bar, content]))
-            page.update()
-            populate()
+            if not current_user:
+                content, populate = build_products_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                populate()
+            else:
+                content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                populate()
         elif current_index == 2:
-            content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
-            page.controls.append(ft.Column([nav_bar, content]))
-            page.update()
-            populate()
+            if not current_user:
+                content, populate = build_sales_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                populate()
+            else:
+                content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                populate()
         elif current_index == 3:
             content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
             page.controls.append(ft.Column([nav_bar, content]))
             page.update()
         elif current_index == 4:
-            content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
-            page.controls.append(ft.Column([nav_bar, content]))
-            page.update()
-            populate()
+            if not current_user:
+                content, populate = build_customers_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                populate()
+            else:
+                content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
+                page.controls.append(ft.Column([nav_bar, content]))
+                page.update()
+                populate()
 
     def go_back():
         if len(nav_history) > 1:

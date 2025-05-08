@@ -146,7 +146,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
                     width=300,
                     bgcolor=ft.colors.BLUE,
                     color=ft.colors.WHITE,
-                    on_click=lambda e: page.run_task(login_click(e))
+                    on_click=lambda e: page.run_task(login_click, e)
                 ),
                 login_feedback
             ],

@@ -48,12 +48,16 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
         else:
             for customer in customers:
                 customers_list.controls.append(
-                    ft.ListTile(
-                        leading=ft.Icon(ft.icons.PERSON),
-                        title=ft.Text(customer['name'], size=16, weight=ft.FontWeight.BOLD),
-                        subtitle=ft.Text(f"Email: {customer.get('email', 'N/A')} | Phone: {customer.get('phone', 'N/A')}", size=14),
-                        content_padding=ft.padding.only(left=10, right=10),
-                        tile_color=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
+                    ft.Container(
+                        content=ft.ListTile(
+                            leading=ft.Icon(ft.icons.PERSON),
+                            title=ft.Text(customer['name'], size=16, weight=ft.FontWeight.BOLD),
+                            subtitle=ft.Text(f"Email: {customer.get('email', 'N/A')} | Phone: {customer.get('phone', 'N/A')}", size=14),
+                            content_padding=ft.padding.only(left=10, right=10),
+                        ),
+                        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+                        border_radius=5,
+                        padding=5
                     )
                 )
         customers_list.update()
@@ -131,6 +135,78 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
                 on_click=create_customer
             ),
             feedback,
+            ft.Container(
+                content=customers_list,
+                padding=10,
+                border=ft.border.all(1, ft.colors.GREY_300),
+                border_radius=10
+            )
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
+        padding=20,
+        bgcolor=bgcolor,
+        border_radius=15,
+        shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900)
+    )
+
+    return container, populate_customers
+
+def build_customers_view_unauthorized(page, language="en", show_back=False, go_back=None):
+    texts = {
+        "en": {
+            "title": "Customers",
+            "no_customers": "No customers available"
+        },
+        "fr": {
+            "title": "Clients",
+            "no_customers": "Aucun client disponible"
+        }
+    }
+    lang = texts[language]
+
+    customers_list = ft.ListView(expand=True, spacing=10)
+
+    def fetch_customers():
+        try:
+            response = requests.get("http://localhost:5000/api/customers")
+            if response.status_code == 200:
+                return response.json().get("customers", [])
+        except Exception as e:
+            print(f"Fetch customers error: {str(e)}")
+            return []
+
+    def populate_customers():
+        customers_list.controls.clear()
+        customers = fetch_customers()
+        if not customers:
+            customers_list.controls.append(ft.Text(lang["no_customers"], size=16, text_align="center"))
+        else:
+            for customer in customers:
+                customers_list.controls.append(
+                    ft.Container(
+                        content=ft.ListTile(
+                            leading=ft.Icon(ft.icons.PERSON),
+                            title=ft.Text(customer['name'], size=16, weight=ft.FontWeight.BOLD),
+                            subtitle=ft.Text(f"Email: {customer.get('email', 'N/A')} | Phone: {customer.get('phone', 'N/A')}", size=14),
+                            content_padding=ft.padding.only(left=10, right=10),
+                        ),
+                        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+                        border_radius=5,
+                        padding=5
+                    )
+                )
+        customers_list.update()
+
+    bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
+
+    container = ft.Container(
+        content=ft.Column([
+            ft.IconButton(
+                icon=ft.icons.ARROW_BACK,
+                on_click=lambda e: go_back(),
+                tooltip="Back",
+                visible=show_back
+            ),
+            ft.Text(lang["title"], size=24, weight=ft.FontWeight.BOLD, text_align="center"),
             ft.Container(
                 content=customers_list,
                 padding=10,
