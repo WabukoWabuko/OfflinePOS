@@ -35,12 +35,11 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
 
     def fetch_products():
         try:
-            response = requests.get("[invalid url, do not cite])
+            response = requests.get("http://offlinepos:5000/api/products")
             if response.status_code == 200:
                 return response.json().get("products", [])
         except Exception as e:
-            feedback.value = lang["fetch_error"]
-            feedback.color = ft.colors.RED
+            print(f"Fetch products error: {str(e)}")
             return []
 
     def populate_products():
@@ -72,7 +71,7 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
                 return
 
             response = requests.post(
-                "[invalid url, do not cite],
+                "http://offlinepos:5000/api/products",
                 json={
                     "name": name_field.value,
                     "price": float(price_field.value),

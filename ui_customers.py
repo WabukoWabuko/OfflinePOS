@@ -33,7 +33,7 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
 
     def fetch_customers():
         try:
-            response = requests.get("[invalid url, do not cite])
+            response = requests.get("http://offlinepos:5000/api/customers")
             if response.status_code == 200:
                 return response.json().get("customers", [])
         except Exception as e:
@@ -68,7 +68,7 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
                 return
 
             response = requests.post(
-                "[invalid url, do not cite],
+                "http://offlinepos:5000/api/customers",
                 json={
                     "name": name_field.value,
                     "email": email_field.value,

@@ -40,7 +40,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
     async def monitor_connection():
         while True:
             try:
-                requests.get("[invalid url, do not cite] timeout=3)
+                requests.get("https://www.google.com", timeout=3)
                 status_text.value = "Online"
                 status_text.color = ft.colors.GREEN
             except requests.RequestException:
@@ -52,7 +52,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
     # Check session
     def check_session():
         try:
-            response = requests.get("[invalid url, do not cite])
+            response = requests.get("http://offlinepos:5000/api/check-session")
             if response.status_code == 200 and response.json().get("user_id"):
                 login_feedback.value = lang["already_logged_in"]
                 login_feedback.color = ft.colors.BLUE
@@ -80,7 +80,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         for attempt in range(retries):
             try:
                 response = requests.post(
-                    "[invalid url, do not cite]
+                    "http://offlinepos:5000/api/login",
                     json={
                         "username": username_field.value,
                         "password": password_field.value

@@ -105,7 +105,7 @@ def main(page: ft.Page):
 
     def fetch_analytics():
         try:
-            response = requests.get("[invalid url, do not cite])
+            response = requests.get("http://offlinepos:5000/api/sales/analytics")
             if response.status_code == 200:
                 return response.json()
         except Exception as e:
@@ -148,7 +148,7 @@ def main(page: ft.Page):
         current_user = None
         current_role = None
         nav_history = [0]
-        requests.post("[invalid url, do not cite])
+        requests.post("http://offlinepos:5000/api/logout")
         navigate(None)
 
     # Initial view

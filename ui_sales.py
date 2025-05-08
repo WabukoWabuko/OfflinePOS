@@ -41,22 +41,20 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
 
     def fetch_analytics():
         try:
-            response = requests.get("[invalid url, do not cite])
+            response = requests.get("http://offlinepos:5000/api/sales/analytics")
             if response.status_code == 200:
                 return response.json()
         except Exception as e:
-            feedback.value = lang["fetch_error"]
-            feedback.color = ft.colors.RED
+            print(f"Analytics fetch error: {str(e)}")
             return {"total_sales": 0, "sale_count": 0}
 
     def fetch_sales():
         try:
-            response = requests.get("[invalid url, do not cite])
+            response = requests.get("http://offlinepos:5000/api/sales")
             if response.status_code == 200:
                 return response.json().get("sales", [])
         except Exception as e:
-            feedback.value = lang["fetch_error"]
-            feedback.color = ft.colors.RED
+            print(f"Fetch sales error: {str(e)}")
             return []
 
     def populate_sales():
@@ -87,7 +85,7 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
                 return
 
             response = requests.post(
-                "[invalid url, do not cite],
+                "http://offlinepos:5000/api/sales",
                 json={
                     "total_amount": float(total_amount_field.value),
                     "payment_method": payment_method_dropdown.value,
