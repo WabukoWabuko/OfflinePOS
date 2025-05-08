@@ -55,7 +55,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
     # Check session
     def check_session():
         try:
-            response = requests.get("http://offlinepos:5000/api/check-session")
+            response = requests.get("http://localhost:5000/api/check-session")
             if response.status_code == 200 and response.json().get("user_id"):
                 login_feedback.value = lang["already_logged_in"]
                 login_feedback.color = ft.colors.BLUE
@@ -83,7 +83,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         for attempt in range(retries):
             try:
                 response = requests.post(
-                    "http://offlinepos:5000/api/login",
+                    "http://localhost:5000/api/login",
                     json={
                         "username": username_field.value,
                         "password": password_field.value
@@ -146,7 +146,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
                     width=300,
                     bgcolor=ft.colors.BLUE,
                     color=ft.colors.WHITE,
-                    on_click=lambda e: page.run_task(login_click)
+                    on_click=lambda e: page.run_task(login_click(e))
                 ),
                 login_feedback
             ],

@@ -41,7 +41,7 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
 
     def fetch_analytics():
         try:
-            response = requests.get("http://offlinepos:5000/api/sales/analytics")
+            response = requests.get("http://localhost:5000/api/sales/analytics")
             if response.status_code == 200:
                 return response.json()
         except Exception as e:
@@ -50,7 +50,7 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
 
     def fetch_sales():
         try:
-            response = requests.get("http://offlinepos:5000/api/sales")
+            response = requests.get("http://localhost:5000/api/sales")
             if response.status_code == 200:
                 return response.json().get("sales", [])
         except Exception as e:
@@ -61,14 +61,17 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
         sales_list.controls.clear()
         sales = fetch_sales()
         if not sales:
-            sales_list.controls.append(ft.Text(lang["no_sales"]))
+            sales_list.controls.append(ft.Text(lang["no_sales"], size=16, text_align="center"))
         else:
             for sale in sales:
                 sales_list.controls.append(
                     ft.ListTile(
-                        title=ft.Text(f"Sale ID: {sale['id']}"),
-                        subtitle=ft.Text(f"Total: ${sale['total_amount']:.2f}, Method: {sale['payment_method']}"),
-                        trailing=ft.Text(sale['created_at'])
+                        leading=ft.Icon(ft.icons.RECEIPT),
+                        title=ft.Text(f"Sale ID: {sale['id']}", size=16, weight=ft.FontWeight.BOLD),
+                        subtitle=ft.Text(f"Total: ${sale['total_amount']:.2f} | Method: {sale['payment_method']}", size=14),
+                        trailing=ft.Text(sale['created_at'], size=12),
+                        content_padding=ft.padding.only(left=10, right=10),
+                        tile_color=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
                     )
                 )
         sales_list.update()
@@ -88,7 +91,7 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             payment_method = "CASH" if payment_method_dropdown.value.lower() == "cash" else "CARD"
 
             response = requests.post(
-                "http://offlinepos:5000/api/sales",
+                "http://localhost:5000/api/sales",
                 json={
                     "total_amount": float(total_amount_field.value),
                     "payment_method": payment_method,
@@ -123,21 +126,21 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
                 tooltip="Back",
                 visible=show_back
             ),
-            ft.Text(lang["title"], size=20, weight=ft.FontWeight.BOLD),
+            ft.Text(lang["title"], size=24, weight=ft.FontWeight.BOLD, text_align="center"),
             ft.Row([
                 ft.Text(f"{lang['total_sales']}: ${total_sales:.2f}", size=16),
                 ft.Text(f"{lang['sale_count']}: {sale_count}", size=16)
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
             ft.TextField(
                 label=lang["total_amount"],
-                width=200,
+                width=250,
                 border_color=ft.colors.BLUE,
                 focused_border_color=ft.colors.BLUE_700,
                 cursor_color=ft.colors.BLUE
             ),
             ft.Dropdown(
                 label=lang["payment_method"],
-                width=200,
+                width=250,
                 options=[
                     ft.dropdown.Option(lang["cash"]),
                     ft.dropdown.Option(lang["card"])
@@ -147,13 +150,18 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             ),
             ft.ElevatedButton(
                 text=lang["add_sale"],
-                width=200,
+                width=250,
                 bgcolor=ft.colors.BLUE,
                 color=ft.colors.WHITE,
                 on_click=create_sale
             ),
             feedback,
-            sales_list
+            ft.Container(
+                content=sales_list,
+                padding=10,
+                border=ft.border.all(1, ft.colors.GREY_300),
+                border_radius=10
+            )
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
         padding=20,
         bgcolor=bgcolor,

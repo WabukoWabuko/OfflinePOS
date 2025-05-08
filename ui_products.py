@@ -35,7 +35,7 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
 
     def fetch_products():
         try:
-            response = requests.get("http://offlinepos:5000/api/products")
+            response = requests.get("http://localhost:5000/api/products")
             if response.status_code == 200:
                 return response.json().get("products", [])
         except Exception as e:
@@ -46,13 +46,16 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
         products_list.controls.clear()
         products = fetch_products()
         if not products:
-            products_list.controls.append(ft.Text(lang["no_products"]))
+            products_list.controls.append(ft.Text(lang["no_products"], size=16, text_align="center"))
         else:
             for product in products:
                 products_list.controls.append(
                     ft.ListTile(
-                        title=ft.Text(f"{product['name']}"),
-                        subtitle=ft.Text(f"Price: ${product['price']:.2f}, Stock: {product['stock']}, Barcode: {product['barcode']}")
+                        leading=ft.Icon(ft.icons.SHOPPING_BAG),
+                        title=ft.Text(product['name'], size=16, weight=ft.FontWeight.BOLD),
+                        subtitle=ft.Text(f"Price: ${product['price']:.2f} | Stock: {product['stock']} | Barcode: {product['barcode']}", size=14),
+                        content_padding=ft.padding.only(left=10, right=10),
+                        tile_color=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
                     )
                 )
         products_list.update()
@@ -71,7 +74,7 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
                 return
 
             response = requests.post(
-                "http://offlinepos:5000/api/products",
+                "http://localhost:5000/api/products",
                 json={
                     "name": name_field.value,
                     "price": float(price_field.value),
@@ -102,20 +105,25 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
                 tooltip="Back",
                 visible=show_back
             ),
-            ft.Text(lang["title"], size=20, weight=ft.FontWeight.BOLD),
-            ft.TextField(label=lang["name"], width=200, border_color=ft.colors.BLUE),
-            ft.TextField(label=lang["price"], width=200, border_color=ft.colors.BLUE),
-            ft.TextField(label=lang["stock"], width=200, border_color=ft.colors.BLUE),
-            ft.TextField(label=lang["barcode"], width=200, border_color=ft.colors.BLUE),
+            ft.Text(lang["title"], size=24, weight=ft.FontWeight.BOLD, text_align="center"),
+            ft.TextField(label=lang["name"], width=250, border_color=ft.colors.BLUE),
+            ft.TextField(label=lang["price"], width=250, border_color=ft.colors.BLUE),
+            ft.TextField(label=lang["stock"], width=250, border_color=ft.colors.BLUE),
+            ft.TextField(label=lang["barcode"], width=250, border_color=ft.colors.BLUE),
             ft.ElevatedButton(
                 text=lang["add_product"],
-                width=200,
+                width=250,
                 bgcolor=ft.colors.BLUE,
                 color=ft.colors.WHITE,
                 on_click=create_product
             ),
             feedback,
-            products_list
+            ft.Container(
+                content=products_list,
+                padding=10,
+                border=ft.border.all(1, ft.colors.GREY_300),
+                border_radius=10
+            )
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
         padding=20,
         bgcolor=bgcolor,
