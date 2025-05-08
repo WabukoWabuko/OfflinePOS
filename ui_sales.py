@@ -75,8 +75,8 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
 
     def create_sale(e):
         try:
-            total_amount_field = page.controls[0].content.controls[3]  # Total amount field
-            payment_method_dropdown = page.controls[0].content.controls[4]  # Payment method dropdown
+            total_amount_field = page.controls[0].controls[1].content.controls[3]  # Total amount field
+            payment_method_dropdown = page.controls[0].controls[1].content.controls[4]  # Payment method dropdown
 
             if not total_amount_field.value or not payment_method_dropdown.value:
                 feedback.value = "Please fill all fields"
@@ -84,11 +84,14 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
                 feedback.update()
                 return
 
+            # Map dropdown value to API expected value
+            payment_method = "CASH" if payment_method_dropdown.value.lower() == "cash" else "CARD"
+
             response = requests.post(
                 "http://offlinepos:5000/api/sales",
                 json={
                     "total_amount": float(total_amount_field.value),
-                    "payment_method": payment_method_dropdown.value,
+                    "payment_method": payment_method,
                     "user_id": user_id,
                     "items": []
                 }
@@ -96,7 +99,7 @@ def build_sales_view(page, user_id, language="en", show_back=False, go_back=None
             if response.status_code == 201:
                 feedback.value = lang["success"]
                 feedback.color = ft.colors.GREEN
-                populate_sales()
+                populate_sales()  # Refresh the list after adding a sale
             else:
                 feedback.value = lang["error"]
                 feedback.color = ft.colors.RED

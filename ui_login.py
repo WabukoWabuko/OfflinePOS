@@ -65,9 +65,9 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             pass
 
     # Login button logic
-    async def login_click(e, page, on_login, login_feedback):
-        username_field = page.controls[0].content.controls[3]  # TextField for username
-        password_field = page.controls[0].content.controls[4]  # TextField for password
+    async def login_click(e):
+        username_field = page.controls[0].controls[1].content.controls[2]  # TextField for username
+        password_field = page.controls[0].controls[1].content.controls[3]  # TextField for password
 
         if not username_field.value or not password_field.value:
             login_feedback.value = lang["fill_fields"]
@@ -146,7 +146,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
                     width=300,
                     bgcolor=ft.colors.BLUE,
                     color=ft.colors.WHITE,
-                    on_click=lambda e: asyncio.run(login_click(e, page, on_login, login_feedback))
+                    on_click=lambda e: page.run_task(login_click)
                 ),
                 login_feedback
             ],

@@ -59,10 +59,10 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
 
     def create_product(e):
         try:
-            name_field = page.controls[0].content.controls[2]  # Name field
-            price_field = page.controls[0].content.controls[3]  # Price field
-            stock_field = page.controls[0].content.controls[4]  # Stock field
-            barcode_field = page.controls[0].content.controls[5]  # Barcode field
+            name_field = page.controls[0].controls[1].content.controls[2]  # Name field
+            price_field = page.controls[0].controls[1].content.controls[3]  # Price field
+            stock_field = page.controls[0].controls[1].content.controls[4]  # Stock field
+            barcode_field = page.controls[0].controls[1].content.controls[5]  # Barcode field
 
             if not name_field.value or not price_field.value or not stock_field.value or not barcode_field.value:
                 feedback.value = "Please fill all fields"
@@ -82,7 +82,7 @@ def build_products_view(page, language="en", show_back=False, go_back=None):
             if response.status_code == 201:
                 feedback.value = lang["success"]
                 feedback.color = ft.colors.GREEN
-                populate_products()
+                populate_products()  # Refresh the list after adding a product
             else:
                 feedback.value = lang["error"]
                 feedback.color = ft.colors.RED

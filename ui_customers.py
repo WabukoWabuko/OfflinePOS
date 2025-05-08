@@ -57,9 +57,9 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
 
     def create_customer(e):
         try:
-            name_field = page.controls[0].content.controls[2]  # Name field
-            email_field = page.controls[0].content.controls[3]  # Email field
-            phone_field = page.controls[0].content.controls[4]  # Phone field
+            name_field = page.controls[0].controls[1].content.controls[2]  # Name field
+            email_field = page.controls[0].controls[1].content.controls[3]  # Email field
+            phone_field = page.controls[0].controls[1].content.controls[4]  # Phone field
 
             if not name_field.value:
                 feedback.value = "Please fill the name field"
@@ -78,7 +78,7 @@ def build_customers_view(page, language="en", show_back=False, go_back=None):
             if response.status_code == 201:
                 feedback.value = lang["success"]
                 feedback.color = ft.colors.GREEN
-                populate_customers()
+                populate_customers()  # Refresh the list after adding a customer
             else:
                 feedback.value = lang["error"]
                 feedback.color = ft.colors.RED
