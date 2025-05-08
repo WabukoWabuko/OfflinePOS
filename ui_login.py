@@ -41,12 +41,15 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
         while True:
             try:
                 requests.get("https://www.google.com", timeout=3)
-                status_text.value = "Online"
-                status_text.color = ft.colors.GREEN
+                if status_text.page:  # Check if status_text is added to the page
+                    status_text.value = "Online"
+                    status_text.color = ft.colors.GREEN
+                    status_text.update()
             except requests.RequestException:
-                status_text.value = "Offline"
-                status_text.color = ft.colors.RED
-            status_text.update()
+                if status_text.page:
+                    status_text.value = "Offline"
+                    status_text.color = ft.colors.RED
+                    status_text.update()
             await asyncio.sleep(5)
 
     # Check session
@@ -117,7 +120,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
             [
                 ft.IconButton(
                     icon=ft.icons.ARROW_BACK,
-                    on_click=lambda e: go_back(),
+                    on_click=lambda e: go_back() if go_back else None,
                     tooltip="Back",
                     visible=show_back
                 ),
@@ -143,7 +146,7 @@ def build_login_view(page, on_login, language="en", show_back=False, go_back=Non
                     width=300,
                     bgcolor=ft.colors.BLUE,
                     color=ft.colors.WHITE,
-                    on_click=lambda e: login_click(e, page, on_login, login_feedback)
+                    on_click=lambda e: asyncio.run(login_click(e, page, on_login, login_feedback))
                 ),
                 login_feedback
             ],

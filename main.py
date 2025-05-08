@@ -51,7 +51,7 @@ def main(page: ft.Page):
         nav_bar.selected_index = current_index
         if current_index == 0:
             if not current_user:
-                content, start_monitoring = build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)
+                content, start_monitoring = build_login_view(page, on_login=on_login, language=current_language, show_back=False, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content]))
                 page.update()
                 start_monitoring()
@@ -155,7 +155,7 @@ def main(page: ft.Page):
     page.add(
         ft.Column([
             nav_bar,
-            build_login_view(page, on_login=on_login, language=current_language, show_back=len(nav_history) > 1, go_back=go_back)[0]
+            build_login_view(page, on_login=on_login, language=current_language, show_back=False, go_back=go_back)[0]
         ])
     )
 
