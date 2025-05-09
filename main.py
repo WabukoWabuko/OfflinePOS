@@ -261,27 +261,31 @@ def main(page: ft.Page):
         else:
             top_products_list.controls.append(ft.Text("No products available", size=16, text_align="center"))
 
+        # Wrap Column in a Container to enable scrolling
+        dashboard_content = ft.Column([
+            ft.Row([
+                ft.Text("Admin Dashboard", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
+                ft.ElevatedButton(
+                    text="Logout",
+                    on_click=lambda e: logout(),
+                    bgcolor=ft.colors.RED_600,
+                    color=ft.colors.WHITE,
+                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
+                )
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            metric_cards,
+            ft.Text("Recent Sales", size=18, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
+            ft.Container(content=sales_list, height=200, padding=10, border=ft.border.all(1, ft.colors.GREY_300), border_radius=10),
+            ft.Text("Top Products", size=18, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
+            ft.Container(content=top_products_list, height=200, padding=10, border=ft.border.all(1, ft.colors.GREY_300), border_radius=10)
+        ], spacing=20)
+
         return ft.Container(
-            content=ft.Column([
-                ft.Row([
-                    ft.Text("Admin Dashboard", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
-                    ft.ElevatedButton(
-                        text="Logout",
-                        on_click=lambda e: logout(),
-                        bgcolor=ft.colors.RED_600,
-                        color=ft.colors.WHITE,
-                        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
-                    )
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                metric_cards,
-                ft.Text("Recent Sales", size=18, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
-                ft.Container(content=sales_list, height=200, padding=10, border=ft.border.all(1, ft.colors.GREY_300), border_radius=10),
-                ft.Text("Top Products", size=18, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
-                ft.Container(content=top_products_list, height=200, padding=10, border=ft.border.all(1, ft.colors.GREY_300), border_radius=10)
-            ], spacing=20, scroll=ft.ScrollMode.AUTO),
+            content=dashboard_content,
             padding=30,
             bgcolor=ft.colors.WHITE,
-            expand=True
+            expand=True,
+            scroll=ft.ScrollMode.AUTO
         )
 
     def logout():
