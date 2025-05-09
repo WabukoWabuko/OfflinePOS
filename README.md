@@ -12,6 +12,40 @@ OfflinePOS is a premium Point of Sale (POS) system designed for world-class supe
 - **Offline-First**: Designed to function seamlessly with local data when offline, syncing with the server when online.
 - **Real-Time Updates**: Polls data every 30 seconds and supports live reload on code changes.
 
+## System Architecture
+Below is a diagram illustrating the architecture and data flow of OfflinePOS:
+
+```mermaid
+graph TD
+    A[User] -->|Accesses| B[Frontend: Flet UI]
+    B -->|Navigates| C[Sidebar Navigation]
+    C --> D[Dashboard]
+    C --> E[Products]
+    C --> F[Sales]
+    C --> G[Customers]
+    C --> H[Settings]
+
+    B -->|Requests Data| I[Backend API]
+    I -->|Fetches/Saves| J[Database]
+    I -->|Polls Every 30s| B
+    J -->|Stores| K[Products Data]
+    J -->|Stores| L[Sales Data]
+    J -->|Stores| M[Customers Data]
+
+    subgraph Offline Mode
+        B -->|Uses| N[Local Data Cache]
+        N -->|Syncs When Online| I
+    end
+
+    D -->|Displays| O[Metric Cards]
+    D -->|Displays| P[Recent Sales]
+    D -->|Displays| Q[Top Products]
+    E -->|Manages| R[Product List]
+    F -->|Manages| S[Sales List]
+    G -->|Manages| T[Customer List]
+    H -->|Configures| U[Language & Theme]
+```
+
 ## Prerequisites
 - Docker
 - Docker Compose
