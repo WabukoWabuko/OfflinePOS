@@ -32,7 +32,7 @@ def main(page: ft.Page):
     # Navigation bar
     nav_bar = ft.NavigationBar(
         destinations=[
-            ft.NavigationBarDestination(icon=ft.icons.HOME, label="Home"),
+            ft.NavigationBarDestination(icon=ft.icons.HOME, label="Dashboard"),
             ft.NavigationBarDestination(icon=ft.icons.STORE, label="Products"),
             ft.NavigationBarDestination(icon=ft.icons.RECEIPT, label="Sales"),
             ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label="Settings"),
@@ -66,26 +66,22 @@ def main(page: ft.Page):
                 page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
                 page.update()
                 page.run_task(start_polling(populate))
-                populate()
             else:
                 content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
                 page.update()
                 page.run_task(start_polling(populate))
-                populate()
         elif current_index == 2:
             if not current_user:
                 content, populate = build_sales_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
                 page.update()
                 page.run_task(start_polling(populate))
-                populate()
             else:
                 content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
                 page.update()
                 page.run_task(start_polling(populate))
-                populate()
         elif current_index == 3:
             content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
             page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
@@ -96,13 +92,11 @@ def main(page: ft.Page):
                 page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
                 page.update()
                 page.run_task(start_polling(populate))
-                populate()
             else:
                 content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
                 page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
                 page.update()
                 page.run_task(start_polling(populate))
-                populate()
 
     async def start_polling(populate_func):
         while nav_bar.selected_index == nav_history[-1]:
@@ -118,7 +112,7 @@ def main(page: ft.Page):
         nonlocal current_user, current_role
         current_user = user_id
         current_role = role
-        nav_history = [0]  # Reset navigation to dashboard
+        nav_history = [0]  # Reset to dashboard after login
         navigate(None)
 
     def update_language(lang):
@@ -142,50 +136,46 @@ def main(page: ft.Page):
             print(f"Analytics fetch error: {str(e)}")
         return {"total_sales": 0, "sale_count": 0}
 
-    def fetch_sales_data_for_chart():
+    def fetch_sales_data():
         try:
             response = requests.get("http://localhost:5000/api/sales")
             if response.status_code == 200:
-                sales = response.json().get("sales", [])
-                # Aggregate sales by date (simplified for demo)
-                sales_by_date = {}
-                for sale in sales:
-                    date = sale['created_at'].split('T')[0]
-                    sales_by_date[date] = sales_by_date.get(date, 0) + sale['total_amount']
-                dates = list(sales_by_date.keys())[-5:]  # Last 5 dates
-                amounts = [sales_by_date[date] for date in dates]
-                return dates, amounts
+                return response.json().get("sales", [])
         except Exception as e:
-            print(f"Sales chart fetch error: {str(e)}")
-        return [], []
+            print(f"Sales fetch error: {str(e)}")
+        return []
 
     def build_dashboard_view(go_back):
         analytics = fetch_analytics()
-        dates, amounts = fetch_sales_data_for_chart()
+        sales_data = fetch_sales_data()
         bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
 
-        # Create a simple line chart using matplotlib on a canvas
-        chart_script = f"""
-import matplotlib.pyplot as plt
-dates = {dates}
-amounts = {amounts}
-plt.figure(figsize=(6, 4))
-plt.plot(dates, amounts, marker='o', color='blue')
-plt.title('Sales Trend')
-plt.xlabel('Date')
-plt.ylabel('Total Amount ($)')
-plt.xticks(rotation=45)
-plt.grid(True)
-plt.tight_layout()
-plt.savefig('sales_trend.png')
-"""
-        chart_container = ft.Canvas(
-            content=ft.Text("Loading chart..."),
-            script=chart_script,
-            script_language="python",
-            height=300,
-            width=400
-        )
+        # Admin management buttons
+        admin_controls = ft.Row([
+            ft.ElevatedButton("Manage Products", on_click=lambda e: navigate(None), bgcolor=ft.colors.BLUE, color=ft.colors.WHITE),
+            ft.ElevatedButton("Manage Sales", on_click=lambda e: navigate(None), bgcolor=ft.colors.GREEN, color=ft.colors.WHITE),
+            ft.ElevatedButton("Manage Customers", on_click=lambda e: navigate(None), bgcolor=ft.colors.PURPLE, color=ft.colors.WHITE)
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=10)
+
+        # Recent sales list
+        sales_list = ft.ListView(expand=True, spacing=10)
+        if sales_data:
+            for sale in sales_data[-5:]:  # Show last 5 sales
+                sales_list.controls.append(
+                    ft.Container(
+                        content=ft.ListTile(
+                            leading=ft.Icon(ft.icons.RECEIPT),
+                            title=ft.Text(f"Sale ID: {sale['id']}", size=16, weight=ft.FontWeight.BOLD),
+                            subtitle=ft.Text(f"Total: ${sale['total_amount']:.2f} | Method: {sale['payment_method']}", size=14),
+                            trailing=ft.Text(sale['created_at'], size=12),
+                        ),
+                        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+                        border_radius=5,
+                        padding=5
+                    )
+                )
+        else:
+            sales_list.controls.append(ft.Text("No recent sales", size=16, text_align="center"))
 
         return ft.Container(
             content=ft.Column([
@@ -203,12 +193,14 @@ plt.savefig('sales_trend.png')
                         color=ft.colors.WHITE
                     )
                 ]),
-                ft.Text("Dashboard", size=20, weight=ft.FontWeight.BOLD),
+                ft.Text("Admin Dashboard", size=20, weight=ft.FontWeight.BOLD),
+                admin_controls,
                 ft.Row([
                     ft.Text(f"Total Sales: ${analytics['total_sales']:.2f}", size=16),
                     ft.Text(f"Sale Count: {analytics['sale_count']}", size=16)
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
-                chart_container
+                ft.Text("Recent Sales", size=18, weight=ft.FontWeight.BOLD),
+                sales_list
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=20, scroll=ft.ScrollMode.AUTO),
             padding=20,
             bgcolor=bgcolor,
