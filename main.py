@@ -16,116 +16,138 @@ sys.path.append('/app')
 
 def main(page: ft.Page):
     print("Starting main function...")
-    page.title = "OfflinePOS"
+    page.title = "OfflinePOS - Premium"
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.bgcolor = ft.colors.GREY_100
+    page.bgcolor = ft.colors.BLUE_50
+    page.padding = 0
 
     # State for navigation
     current_user = None
     current_role = None
     current_language = "en"
     current_theme = ft.ThemeMode.LIGHT
-    theme_mode = ft.Ref()
-    nav_history = [0]
+    nav_index = 0
 
-    # Navigation bar
-    nav_bar = ft.NavigationBar(
-        destinations=[
-            ft.NavigationBarDestination(icon=ft.icons.HOME, label="Dashboard"),
-            ft.NavigationBarDestination(icon=ft.icons.STORE, label="Products"),
-            ft.NavigationBarDestination(icon=ft.icons.RECEIPT, label="Sales"),
-            ft.NavigationBarDestination(icon=ft.icons.SETTINGS, label="Settings"),
-            ft.NavigationBarDestination(icon=ft.icons.PERSON, label="Customers")
+    # Sidebar Navigation
+    sidebar = ft.NavigationDrawer(
+        controls=[
+            ft.Container(height=20),
+            ft.Text("OfflinePOS", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
+            ft.Divider(color=ft.colors.WHITE30),
+            ft.NavigationDrawerDestination(
+                icon=ft.icons.DASHBOARD,
+                label="Dashboard",
+                selected_icon=ft.icons.DASHBOARD,
+            ),
+            ft.NavigationDrawerDestination(
+                icon=ft.icons.STORE,
+                label="Products",
+                selected_icon=ft.icons.STORE,
+            ),
+            ft.NavigationDrawerDestination(
+                icon=ft.icons.RECEIPT,
+                label="Sales",
+                selected_icon=ft.icons.RECEIPT,
+            ),
+            ft.NavigationDrawerDestination(
+                icon=ft.icons.PERSON,
+                label="Customers",
+                selected_icon=ft.icons.PERSON,
+            ),
+            ft.NavigationDrawerDestination(
+                icon=ft.icons.SETTINGS,
+                label="Settings",
+                selected_icon=ft.icons.SETTINGS,
+            ),
         ],
-        on_change=lambda e: navigate(e),
-        selected_index=0
+        bgcolor=ft.colors.BLUE_900,
+        indicator_color=ft.colors.BLUE_600,
+        on_change=lambda e: navigate(e.control.selected_index),
+        selected_index=0,
+        padding=10
     )
 
-    def navigate(e):
-        if e is not None:
-            new_index = nav_bar.selected_index
-            if new_index != nav_history[-1]:
-                nav_history.append(new_index)
+    def navigate(index):
+        nonlocal nav_index
+        nav_index = index
+        sidebar.selected_index = nav_index
         page.controls.clear()
-        current_index = nav_history[-1]
-        nav_bar.selected_index = current_index
-        if current_index == 0:
+        if nav_index == 0:
             if not current_user:
-                content, start_monitoring = build_login_view(page, on_login=on_login, language=current_language, show_back=False, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                content, start_monitoring = build_login_view(page, on_login=on_login, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
                 start_monitoring()
             else:
-                content = build_dashboard_view(go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                content = build_dashboard_view()
+                page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-        elif current_index == 1:
+        elif nav_index == 1:
             if not current_user:
-                content, populate = build_products_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                content, populate = build_products_view_unauthorized(page, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                page.run_task(start_polling(populate))
+                populate()  # Populate immediately
+                page.run_task(lambda: start_polling(populate))
             else:
-                content, populate = build_products_view(page, language=current_language, show_back=True, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                content, populate = build_products_view(page, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                page.run_task(start_polling(populate))
-        elif current_index == 2:
+                populate()  # Populate immediately
+                page.run_task(lambda: start_polling(populate))
+        elif nav_index == 2:
             if not current_user:
-                content, populate = build_sales_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                content, populate = build_sales_view_unauthorized(page, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                page.run_task(start_polling(populate))
+                populate()  # Populate immediately
+                page.run_task(lambda: start_polling(populate))
             else:
-                content, populate = build_sales_view(page, user_id=current_user, language=current_language, show_back=True, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                content, populate = build_sales_view(page, user_id=current_user, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                page.run_task(start_polling(populate))
-        elif current_index == 3:
-            content = build_settings_view(page, theme_mode=theme_mode, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme, show_back=True, go_back=go_back)
-            page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
+                populate()  # Populate immediately
+                page.run_task(lambda: start_polling(populate))
+        elif nav_index == 3:
+            if not current_user:
+                content, populate = build_customers_view_unauthorized(page, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
+                page.update()
+                populate()  # Populate immediately
+                page.run_task(lambda: start_polling(populate))
+            else:
+                content, populate = build_customers_view(page, language=current_language)
+                page.controls.append(ft.Row([sidebar, content], expand=True))
+                page.update()
+                populate()  # Populate immediately
+                page.run_task(lambda: start_polling(populate))
+        elif nav_index == 4:
+            content = build_settings_view(page, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme)
+            page.controls.append(ft.Row([sidebar, content], expand=True))
             page.update()
-        elif current_index == 4:
-            if not current_user:
-                content, populate = build_customers_view_unauthorized(page, language=current_language, show_back=True, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
-                page.update()
-                page.run_task(start_polling(populate))
-            else:
-                content, populate = build_customers_view(page, language=current_language, show_back=True, go_back=go_back)
-                page.controls.append(ft.Column([nav_bar, content], scroll=ft.ScrollMode.AUTO))
-                page.update()
-                page.run_task(start_polling(populate))
 
     async def start_polling(populate_func):
-        while nav_bar.selected_index == nav_history[-1]:
+        while nav_index == sidebar.selected_index:
             await asyncio.sleep(30)  # Poll every 30 seconds
             populate_func()
-
-    def go_back():
-        if len(nav_history) > 1:
-            nav_history.pop()
-            navigate(None)
 
     def on_login(user_id, role):
         nonlocal current_user, current_role
         current_user = user_id
         current_role = role
-        nav_history = [0]  # Reset to dashboard after login
-        navigate(None)
+        navigate(0)  # Go to dashboard after login
 
     def update_language(lang):
         nonlocal current_language
         current_language = lang
-        navigate(None)
+        navigate(nav_index)
 
     def update_theme(new_theme):
         nonlocal current_theme
         current_theme = new_theme
         page.theme_mode = current_theme
-        page.bgcolor = ft.colors.GREY_100 if current_theme == ft.ThemeMode.LIGHT else ft.colors.GREY_900
-        navigate(None)  # Rebuild current view with new theme
+        page.bgcolor = ft.colors.BLUE_50 if current_theme == ft.ThemeMode.LIGHT else ft.colors.GREY_900
+        navigate(nav_index)
 
     def fetch_analytics():
         try:
@@ -145,31 +167,75 @@ def main(page: ft.Page):
             print(f"Sales fetch error: {str(e)}")
         return []
 
-    def build_dashboard_view(go_back):
+    def fetch_top_products():
+        try:
+            response = requests.get("http://localhost:5000/api/products")
+            if response.status_code == 200:
+                products = response.json().get("products", [])
+                # Simulate top products by sorting by stock (for demo purposes)
+                return sorted(products, key=lambda x: x['stock'], reverse=True)[:3]
+        except Exception as e:
+            print(f"Top products fetch error: {str(e)}")
+        return []
+
+    def build_dashboard_view():
         analytics = fetch_analytics()
         sales_data = fetch_sales_data()
-        bgcolor = ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800
+        top_products = fetch_top_products()
 
-        # Admin management buttons
-        admin_controls = ft.Row([
-            ft.ElevatedButton("Manage Products", on_click=lambda e: navigate(None), bgcolor=ft.colors.BLUE, color=ft.colors.WHITE),
-            ft.ElevatedButton("Manage Sales", on_click=lambda e: navigate(None), bgcolor=ft.colors.GREEN, color=ft.colors.WHITE),
-            ft.ElevatedButton("Manage Customers", on_click=lambda e: navigate(None), bgcolor=ft.colors.PURPLE, color=ft.colors.WHITE)
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=10)
+        # Metric Cards
+        metric_cards = ft.Row([
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("Total Sales", size=16, color=ft.colors.BLUE_900),
+                    ft.Text(f"${analytics['total_sales']:.2f}", size=24, weight=ft.FontWeight.BOLD)
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+                bgcolor=ft.colors.WHITE,
+                padding=20,
+                border_radius=10,
+                shadow=ft.BoxShadow(blur_radius=10, color=ft.colors.BLUE_200),
+                width=200,
+                height=100
+            ),
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("Sale Count", size=16, color=ft.colors.BLUE_900),
+                    ft.Text(str(analytics['sale_count']), size=24, weight=ft.FontWeight.BOLD)
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+                bgcolor=ft.colors.WHITE,
+                padding=20,
+                border_radius=10,
+                shadow=ft.BoxShadow(blur_radius=10, color=ft.colors.BLUE_200),
+                width=200,
+                height=100
+            ),
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("Daily Sales", size=16, color=ft.colors.BLUE_900),
+                    ft.Text("$0.00", size=24, weight=ft.FontWeight.BOLD)  # Placeholder
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+                bgcolor=ft.colors.WHITE,
+                padding=20,
+                border_radius=10,
+                shadow=ft.BoxShadow(blur_radius=10, color=ft.colors.BLUE_200),
+                width=200,
+                height=100
+            )
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
 
-        # Recent sales list
+        # Recent Sales List
         sales_list = ft.ListView(expand=True, spacing=10)
         if sales_data:
             for sale in sales_data[-5:]:  # Show last 5 sales
                 sales_list.controls.append(
                     ft.Container(
                         content=ft.ListTile(
-                            leading=ft.Icon(ft.icons.RECEIPT),
+                            leading=ft.Icon(ft.icons.RECEIPT, color=ft.colors.BLUE_700),
                             title=ft.Text(f"Sale ID: {sale['id']}", size=16, weight=ft.FontWeight.BOLD),
                             subtitle=ft.Text(f"Total: ${sale['total_amount']:.2f} | Method: {sale['payment_method']}", size=14),
                             trailing=ft.Text(sale['created_at'], size=12),
                         ),
-                        bgcolor=ft.colors.WHITE if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.GREY_800,
+                        bgcolor=ft.colors.WHITE,
                         border_radius=5,
                         padding=5
                     )
@@ -177,51 +243,61 @@ def main(page: ft.Page):
         else:
             sales_list.controls.append(ft.Text("No recent sales", size=16, text_align="center"))
 
+        # Top Products
+        top_products_list = ft.ListView(expand=True, spacing=10)
+        if top_products:
+            for product in top_products:
+                top_products_list.controls.append(
+                    ft.Container(
+                        content=ft.ListTile(
+                            leading=ft.Icon(ft.icons.STORE, color=ft.colors.BLUE_700),
+                            title=ft.Text(product['name'], size=16, weight=ft.FontWeight.BOLD),
+                            subtitle=ft.Text(f"Price: ${product['price']:.2f} | Stock: {product['stock']}", size=14),
+                        ),
+                        bgcolor=ft.colors.WHITE,
+                        border_radius=5,
+                        padding=5
+                    )
+                )
+        else:
+            top_products_list.controls.append(ft.Text("No products available", size=16, text_align="center"))
+
         return ft.Container(
             content=ft.Column([
                 ft.Row([
-                    ft.IconButton(
-                        icon=ft.icons.ARROW_BACK,
-                        on_click=lambda e: go_back(),
-                        tooltip="Back",
-                        visible=len(nav_history) > 1
-                    ),
+                    ft.Text("Admin Dashboard", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
                     ft.ElevatedButton(
                         text="Logout",
                         on_click=lambda e: logout(),
-                        bgcolor=ft.colors.RED,
-                        color=ft.colors.WHITE
+                        bgcolor=ft.colors.RED_600,
+                        color=ft.colors.WHITE,
+                        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10))
                     )
-                ]),
-                ft.Text("Admin Dashboard", size=20, weight=ft.FontWeight.BOLD),
-                admin_controls,
-                ft.Row([
-                    ft.Text(f"Total Sales: ${analytics['total_sales']:.2f}", size=16),
-                    ft.Text(f"Sale Count: {analytics['sale_count']}", size=16)
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=20),
-                ft.Text("Recent Sales", size=18, weight=ft.FontWeight.BOLD),
-                sales_list
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=20, scroll=ft.ScrollMode.AUTO),
-            padding=20,
-            bgcolor=bgcolor,
-            border_radius=15,
-            shadow=ft.BoxShadow(spread_radius=2, blur_radius=15, color=ft.colors.BLUE_100 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLUE_900)
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                metric_cards,
+                ft.Text("Recent Sales", size=18, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
+                ft.Container(content=sales_list, height=200, padding=10, border=ft.border.all(1, ft.colors.GREY_300), border_radius=10),
+                ft.Text("Top Products", size=18, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
+                ft.Container(content=top_products_list, height=200, padding=10, border=ft.border.all(1, ft.colors.GREY_300), border_radius=10)
+            ], spacing=20, scroll=ft.ScrollMode.AUTO),
+            padding=30,
+            bgcolor=ft.colors.WHITE,
+            expand=True
         )
 
     def logout():
         nonlocal current_user, current_role
         current_user = None
         current_role = None
-        nav_history = [0]
         requests.post("http://localhost:5000/api/logout")
-        navigate(None)
+        navigate(0)
 
     # Initial view
     page.add(
-        ft.Column([
-            nav_bar,
-            build_login_view(page, on_login=on_login, language=current_language, show_back=False, go_back=go_back)[0]
-        ], scroll=ft.ScrollMode.AUTO)
+        ft.Row([
+            sidebar,
+            build_login_view(page, on_login=on_login, language=current_language)[0]
+        ], expand=True)
     )
 
 class ChangeHandler(FileSystemEventHandler):
