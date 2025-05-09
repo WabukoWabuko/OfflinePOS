@@ -11,7 +11,6 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-# Add current directory to sys.path to allow local imports
 sys.path.append('/app')
 
 def main(page: ft.Page):
@@ -21,50 +20,11 @@ def main(page: ft.Page):
     page.bgcolor = ft.colors.BLUE_50
     page.padding = 0
 
-    # State for navigation
     current_user = None
     current_role = None
     current_language = "en"
     current_theme = ft.ThemeMode.LIGHT
     nav_index = 0
-
-    # Sidebar Navigation
-    sidebar = ft.NavigationDrawer(
-        controls=[
-            ft.Container(height=20),
-            ft.Text("OfflinePOS", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
-            ft.Divider(color=ft.colors.WHITE30),
-            ft.NavigationDrawerDestination(
-                icon=ft.icons.DASHBOARD,
-                label="Dashboard",
-                selected_icon=ft.icons.DASHBOARD,
-            ),
-            ft.NavigationDrawerDestination(
-                icon=ft.icons.STORE,
-                label="Products",
-                selected_icon=ft.icons.STORE,
-            ),
-            ft.NavigationDrawerDestination(
-                icon=ft.icons.RECEIPT,
-                label="Sales",
-                selected_icon=ft.icons.RECEIPT,
-            ),
-            ft.NavigationDrawerDestination(
-                icon=ft.icons.PERSON,
-                label="Customers",
-                selected_icon=ft.icons.PERSON,
-            ),
-            ft.NavigationDrawerDestination(
-                icon=ft.icons.SETTINGS,
-                label="Settings",
-                selected_icon=ft.icons.SETTINGS,
-            ),
-        ],
-        bgcolor=ft.colors.BLUE_900,
-        indicator_color=ft.colors.BLUE_600,
-        on_change=lambda e: navigate(e.control.selected_index),
-        selected_index=0,
-    )
 
     def navigate(index):
         nonlocal nav_index
@@ -86,55 +46,56 @@ def main(page: ft.Page):
                 content, populate = build_products_view_unauthorized(page, language=current_language)
                 page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                populate()  # Populate immediately
+                populate()
                 page.run_task(lambda: start_polling(populate))
             else:
                 content, populate = build_products_view(page, language=current_language)
                 page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                populate()  # Populate immediately
+                populate()
                 page.run_task(lambda: start_polling(populate))
         elif nav_index == 2:
             if not current_user:
                 content, populate = build_sales_view_unauthorized(page, language=current_language)
                 page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                populate()  # Populate immediately
+                populate()
                 page.run_task(lambda: start_polling(populate))
             else:
                 content, populate = build_sales_view(page, user_id=current_user, language=current_language)
                 page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                populate()  # Populate immediately
+                populate()
                 page.run_task(lambda: start_polling(populate))
         elif nav_index == 3:
             if not current_user:
                 content, populate = build_customers_view_unauthorized(page, language=current_language)
                 page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                populate()  # Populate immediately
+                populate()
                 page.run_task(lambda: start_polling(populate))
             else:
                 content, populate = build_customers_view(page, language=current_language)
                 page.controls.append(ft.Row([sidebar, content], expand=True))
                 page.update()
-                populate()  # Populate immediately
+                populate()
                 page.run_task(lambda: start_polling(populate))
         elif nav_index == 4:
-            content = build_settings_view(page, current_theme=current_theme, language=current_language, on_language_change=update_language, on_theme_change=update_theme)
+            content = build_settings_view(page, current_theme=current_theme, language=current_language,
+                                          on_language_change=update_language, on_theme_change=update_theme)
             page.controls.append(ft.Row([sidebar, content], expand=True))
             page.update()
 
     async def start_polling(populate_func):
         while nav_index == sidebar.selected_index:
-            await asyncio.sleep(30)  # Poll every 30 seconds
+            await asyncio.sleep(30)
             populate_func()
 
     def on_login(user_id, role):
         nonlocal current_user, current_role
         current_user = user_id
         current_role = role
-        navigate(0)  # Go to dashboard after login
+        navigate(0)
 
     def update_language(lang):
         nonlocal current_language
@@ -171,7 +132,6 @@ def main(page: ft.Page):
             response = requests.get("http://localhost:5000/api/products")
             if response.status_code == 200:
                 products = response.json().get("products", [])
-                # Simulate top products by sorting by stock (for demo purposes)
                 return sorted(products, key=lambda x: x['stock'], reverse=True)[:3]
         except Exception as e:
             print(f"Top products fetch error: {str(e)}")
@@ -182,7 +142,6 @@ def main(page: ft.Page):
         sales_data = fetch_sales_data()
         top_products = fetch_top_products()
 
-        # Metric Cards
         metric_cards = ft.Row([
             ft.Container(
                 content=ft.Column([
@@ -211,7 +170,7 @@ def main(page: ft.Page):
             ft.Container(
                 content=ft.Column([
                     ft.Text("Daily Sales", size=16, color=ft.colors.BLUE_900),
-                    ft.Text("$0.00", size=24, weight=ft.FontWeight.BOLD)  # Placeholder
+                    ft.Text("$0.00", size=24, weight=ft.FontWeight.BOLD)
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
                 bgcolor=ft.colors.WHITE,
                 padding=20,
@@ -222,10 +181,9 @@ def main(page: ft.Page):
             )
         ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
 
-        # Recent Sales List
         sales_list = ft.ListView(expand=True, spacing=10)
         if sales_data:
-            for sale in sales_data[-5:]:  # Show last 5 sales
+            for sale in sales_data[-5:]:
                 sales_list.controls.append(
                     ft.Container(
                         content=ft.ListTile(
@@ -242,7 +200,6 @@ def main(page: ft.Page):
         else:
             sales_list.controls.append(ft.Text("No recent sales", size=16, text_align="center"))
 
-        # Top Products
         top_products_list = ft.ListView(expand=True, spacing=10)
         if top_products:
             for product in top_products:
@@ -261,7 +218,6 @@ def main(page: ft.Page):
         else:
             top_products_list.controls.append(ft.Text("No products available", size=16, text_align="center"))
 
-        # Wrap Column in a Container to enable scrolling
         dashboard_content = ft.Column([
             ft.Row([
                 ft.Text("Admin Dashboard", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE_900),
@@ -295,7 +251,19 @@ def main(page: ft.Page):
         requests.post("http://localhost:5000/api/logout")
         navigate(0)
 
-    # Initial view
+    sidebar = ft.NavigationRail(
+        selected_index=0,
+        label_type=ft.NavigationRailLabelType.ALL,
+        destinations=[
+            ft.NavigationRailDestination(icon=ft.icons.DASHBOARD, label="Dashboard"),
+            ft.NavigationRailDestination(icon=ft.icons.STORE, label="Products"),
+            ft.NavigationRailDestination(icon=ft.icons.RECEIPT, label="Sales"),
+            ft.NavigationRailDestination(icon=ft.icons.PERSON, label="Customers"),
+            ft.NavigationRailDestination(icon=ft.icons.SETTINGS, label="Settings"),
+        ],
+        on_change=lambda e: navigate(e.control.selected_index),
+    )
+
     page.add(
         ft.Row([
             sidebar,
@@ -307,7 +275,6 @@ class ChangeHandler(FileSystemEventHandler):
     def on_any_event(self, event):
         if not event.is_directory and event.src_path.endswith('.py'):
             print(f"Change detected in {event.src_path}. Reloading Flet app...")
-            page.update()
 
 if __name__ == "__main__":
     ft.app(target=main, host="0.0.0.0", port=8000)
