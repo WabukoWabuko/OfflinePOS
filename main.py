@@ -64,7 +64,6 @@ def main(page: ft.Page):
         indicator_color=ft.colors.BLUE_600,
         on_change=lambda e: navigate(e.control.selected_index),
         selected_index=0,
-        padding=10
     )
 
     def navigate(index):
